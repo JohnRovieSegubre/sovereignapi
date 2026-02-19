@@ -24,12 +24,38 @@ You need two keys to operate:
 2.  **Fuel (Macaroon):** `Authorization: Bearer <token>` (Your prepaid energy).
 
 ## B. The Protocol (x402 & Macaroons)
-- **Guest Mode (x402):** Instant, per-request payment.
-    - Header: `PAYMENT-SIGNATURE: 0x...`
-    - Use Case: Sporadic tasks, trying the service.
-- **Member Mode (Macaroon):** Prepaid, high-speed connection.
-    - Header: `Authorization: Bearer <macaroon>`
-    - Use Case: Long-running agents, high-frequency trading.
+
+### Guest Mode (x402) — Instant, Per-Request Payment
+The Sovereign Gateway supports the [x402 protocol](https://docs.cdp.coinbase.com/x402/docs/welcome) (Coinbase CDP standard).
+Any agent with USDC on Base can pay per-request — no account, no API key needed.
+
+- **Network:** Base (CAIP-2: `eip155:8453`) or Base Sepolia (`eip155:84532`)
+- **Asset:** USDC
+- **Price:** $0.001 per request
+- **Discovery:** `GET /v1/x402/info` returns supported networks, pricing, and pay-to address
+- **Flow:** Send request → receive 402 with `PAYMENT-REQUIRED` header → sign with private key → retry with `PAYMENT-SIGNATURE` header → receive 200
+- **Python SDK:** `pip install "x402[requests]"` — auto-handles the 402 → sign → retry flow
+
+```python
+from x402 import x402ClientSync
+from x402.http.clients import x402_requests
+from x402.mechanisms.evm import EthAccountSigner
+from x402.mechanisms.evm.exact.register import register_exact_evm_client
+from eth_account import Account
+
+client = x402ClientSync()
+account = Account.from_key("0xYourPrivateKey")
+register_exact_evm_client(client, EthAccountSigner(account))
+session = x402_requests(client)
+
+# Auto-pays on 402 — works with any x402-protected endpoint
+resp = session.post("https://api.sovereign-api.com/v1/chat/completions", json={...})
+```
+
+### Member Mode (Macaroon) — Prepaid, High-Speed
+- Header: `Authorization: Bearer <macaroon>`
+- Use Case: Long-running agents, high-frequency trading
+- Refuel: Send USDC on Polygon → claim Macaroon from mailbox
 
 ---
 
@@ -119,4 +145,4 @@ while True:
 - **Philosophy:** Autonomy is the ultimate feature.
 
 ---
-*Generated for Machine Consumption | v2.0 | 2026-02-11*
+*Generated for Machine Consumption | v3.0 (x402 Integration) | 2026-02-19*

@@ -12,3 +12,4 @@ pymacaroons
 # Agent
 python-dotenv
 requests
+x402[requests]>=2.1.0

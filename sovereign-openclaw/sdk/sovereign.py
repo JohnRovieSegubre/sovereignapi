@@ -32,6 +32,17 @@ import base64
 import json
 from eth_account import Account
 from web3 import Web3
+from pathlib import Path
+
+# x402 client SDK (optional — for Base USDC auto-pay)
+try:
+    from x402 import x402ClientSync
+    from x402.http.clients import x402_requests
+    from x402.mechanisms.evm import EthAccountSigner
+    from x402.mechanisms.evm.exact.register import register_exact_evm_client
+    X402_CLIENT_AVAILABLE = True
+except ImportError:
+    X402_CLIENT_AVAILABLE = False
 
 # --- CONSTANTS ---
 # Standard USDC Contract on Polygon
@@ -99,13 +110,33 @@ class SovereignClient:
         
         self.token = None  # The Macaroon (Bearer Token / Fuel)
         
+        # Token Persistence
+        self.token_file = Path("macaroon.dat") # Default to current dir
+        self._load_token()
+        
         # Setup Namespaces (OpenAI-style API)
         self.chat = self.Chat(self)
         
         print(f"🤖 Sovereign SDK Initialized (Phase 7)")
         print(f"   Gateway: {self.base_url}")
         print(f"   API Key: {self.api_key[:12]}..." if self.api_key else "   API Key: Not Set")
+        print(f"   Token:   {'✅ Loaded' if self.token else '❌ None (Will Refuel)'}")
         print(f"   Mock Mode: {'ON' if self.mock_mode else 'OFF'}")
+
+    def _load_token(self):
+        if self.token_file.exists():
+            try:
+                with open(self.token_file, "r") as f:
+                    self.token = f.read().strip()
+            except Exception as e:
+                print(f"⚠️ Failed to load token: {e}")
+
+    def _save_token(self):
+        try:
+            with open(self.token_file, "w") as f:
+                f.write(self.token)
+        except Exception as e:
+            print(f"⚠️ Failed to save token: {e}")
 
     class Chat:
         def __init__(self, client):
@@ -146,6 +177,7 @@ class SovereignClient:
                         new_token = response.headers.get("X-Sovereign-Balance-Token")
                         if new_token:
                             self.client.token = new_token
+                            self.client._save_token()
                             print("🔄 Token Rotated (Balance Updated)")
                             
                         # x402 RECEIPT
@@ -169,24 +201,24 @@ class SovereignClient:
                     elif response.status_code == 402:
                         print("💰 Payment Required (402). Checking Protocol...")
                         
-                        # === CASE A: x402 (Standard) ===
+                        # === CASE A: x402 (Real CDP Protocol) ===
                         x402_header = response.headers.get("PAYMENT-REQUIRED")
-                        if x402_header:
-                            print("⚡ x402 Header Detected. Handling Instant Payment...")
-                            signature = self.client._handle_x402_payment(x402_header)
-                            if signature:
-                                print("🔁 Retrying request with x402 Signature...")
-                                # Recursive retry with Signature Header
-                                # Note: We need to pass the signature down. 
-                                # Ideally, we'd add it to headers for the retry.
-                                # But create() doesn't take headers arg.
-                                # Quick Fix: Use a temporary instance var or modify create signature?
-                                # Better: Just do the request again here to avoid recursion signature mess.
-                                headers["PAYMENT-SIGNATURE"] = signature
-                                retry_resp = requests.post(url, json=payload, headers=headers, timeout=120)
-                                return retry_resp.json() # Simple retry logic
-                            else:
-                                return {"error": "x402 Payment Failed"}
+                        if x402_header and self.client._has_x402_support():
+                            print("⚡ x402 Header Detected. Auto-paying via x402 SDK...")
+                            try:
+                                x402_session = self.client._get_x402_session()
+                                retry_resp = x402_session.post(url, json=payload, headers=headers, timeout=120)
+                                if retry_resp.ok:
+                                    new_token = retry_resp.headers.get("X-Sovereign-Balance-Token")
+                                    if new_token:
+                                        self.client.token = new_token
+                                        self.client._save_token()
+                                    return retry_resp.json()
+                                else:
+                                    return {"error": f"x402 payment failed: {retry_resp.status_code}", "detail": retry_resp.text}
+                            except Exception as e:
+                                print(f"❌ x402 auto-pay error: {e}")
+                                return {"error": f"x402 Payment Failed: {e}"}
 
                         # === CASE B: MACAROON / POLYGON (Legacy/Prepay) ===
                         print("   Falling back to Polygon Prepay...")
@@ -240,6 +272,8 @@ class SovereignClient:
                 if resp.status_code == 200:
                     data = resp.json()
                     print("\n✅ Token Claimed Successfully!")
+                    self.client.token = data["access_token"]  # Update in memory
+                    self.client._save_token()                 # Persist to disk
                     return data["access_token"]
                     
                 elif resp.status_code == 410:
@@ -364,51 +398,20 @@ class SovereignClient:
         else:
             raise ValueError(f"Relay failed: {resp.text}")
 
-    def _handle_x402_payment(self, header_guts):
-        """
-        Parses PAYMENT-REQUIRED header, finds a valid scheme, and signs for it.
-        Returns: signature string (or None)
-        """
-        try:
-            # 1. Decode
-            data = json.loads(base64.b64decode(header_guts).decode())
-            accepts = data.get("accepts", [])
-            
-            # 2. Find a supported scheme (Polygon Mainnet)
-            # In a real agent, we'd check which chains we have funds on.
-            print(f"   x402 Accepts: {accepts}")
-            target_scheme = None
-            for scheme in accepts:
-                if "polygon" in scheme.get("network", ""):
-                    target_scheme = scheme
-                    break
-            
-            if not target_scheme:
-                print(f"❌ No supported x402 network found (Looking for Polygon, got: {[s.get('network') for s in accepts]}).")
-                return None
-                
-            print(f"   Selected Scheme: {target_scheme['network']} ({target_scheme['price']} USDC)")
-            
-            # 3. Sign (Mocked for now - Real signing requires EIP-712 or transfer)
-            # The x402 spec usually requires signing a specific typed data structure.
-            # For this MVP, we will sign a simple message confirming intent.
-            # In production, this must be a real on-chain formatting or EIP-3009 permit.
-            if not self.private_key:
-                print("❌ No Private Key for signing.")
-                return None
-            
-            msg = f"I authorize payment of 0.01 USDC to {target_scheme.get('payTo')} on polygon-mainnet"
-            from eth_account.messages import encode_defunct
-            signable_msg = encode_defunct(text=msg)
-            signed_msg = self.account.sign_message(signable_msg)
-            
-            # We return a dummy signature structure for the MVP middleware to accept
-            # Use '0x...' format for the signature
-            return signed_msg.signature.hex()
-            
-        except Exception as e:
-            print(f"❌ x402 Error: {e}")
-            return None
+    def _has_x402_support(self):
+        """Check if this client can auto-pay via x402 (needs private key + SDK)."""
+        return X402_CLIENT_AVAILABLE and self.private_key is not None
+
+    def _get_x402_session(self):
+        """Create an x402-aware requests session that auto-handles 402 → sign → retry."""
+        if not X402_CLIENT_AVAILABLE:
+            raise ImportError("x402 SDK not installed. Run: pip install 'x402[requests]'")
+        if not self.private_key:
+            raise ValueError("No private key configured for x402 signing.")
+
+        client = x402ClientSync()
+        register_exact_evm_client(client, EthAccountSigner(self.account))
+        return x402_requests(client)
     
     def set_token(self, token):
         """

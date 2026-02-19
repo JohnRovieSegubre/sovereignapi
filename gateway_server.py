@@ -9,11 +9,45 @@ import sys
 import secrets
 import requests
 from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 import base64
 from pymacaroons import Macaroon, Verifier
 from api_key_registry import validate_key, get_agent_name, increment_usage
+
+# --- x402 PROTOCOL (Real Coinbase CDP integration) ---
+try:
+    from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
+    from x402.http.middleware.fastapi import PaymentMiddlewareASGI
+    from x402.http.types import RouteConfig
+    from x402.mechanisms.evm.exact import ExactEvmServerScheme
+    from x402.server import x402ResourceServer
+    X402_SDK_AVAILABLE = True
+except ImportError:
+    X402_SDK_AVAILABLE = False
+    print("⚠️  [x402] SDK not installed. Run: pip install 'x402[fastapi]'")
+
+# --- FORCE LOAD .env (Fix 1: Docker env mounting) ---
+env_path = Path("/app/.env")
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path, override=True)
+    print("✅ [Sovereign] .env LOADED INSIDE CONTAINER")
+else:
+    # Fallback: try local .env for development
+    local_env = Path(__file__).parent / ".env"
+    if local_env.exists():
+        load_dotenv(dotenv_path=local_env, override=True)
+        print("✅ [Sovereign] .env LOADED (local dev)")
+    else:
+        print("⚠️  [Sovereign] No .env found — using host/Docker defaults only")
+
+print("=== GATEWAY ENV DEBUG ===")
+print(f"  POLYGON_RPC            = {os.getenv('POLYGON_RPC', '(NOT SET)')}")
+print(f"  FACILITATOR_KEY present = {bool(os.getenv('FACILITATOR_PRIVATE_KEY'))}")
+print(f"  ENABLE_X402            = {os.getenv('ENABLE_X402', '(NOT SET)')}")
+print(f"  MINT_SECRET present    = {bool(os.getenv('MINT_SECRET'))}")
+print("=========================")
 
 app = FastAPI(title="Sovereign AI Gateway (Phase 7: Decoupled Identity + Fuel)")
 
@@ -39,13 +73,48 @@ ALBY_ACCESS_TOKEN = os.getenv("ALBY_ACCESS_TOKEN")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 MINT_SECRET = os.getenv("MINT_SECRET")
 
-# --- x402 CONFIGURATION ---
-X402_FACILITATOR_URL = os.getenv("X402_FACILITATOR_URL", "https://api.cdp.coinbase.com/platform/v2/x402")
-X402_WALLET_ADDRESS = os.getenv("X402_WALLET_ADDRESS") 
+# --- x402 CONFIGURATION (Coinbase CDP / Base network) ---
+X402_PAY_TO = os.getenv("X402_PAY_TO_ADDRESS", os.getenv("X402_WALLET_ADDRESS", ""))
+X402_NETWORK = os.getenv("X402_NETWORK", "eip155:84532")  # Base Sepolia default
+X402_FACILITATOR_URL = os.getenv("X402_FACILITATOR_URL", "https://x402.org/facilitator")
+X402_PRICE = os.getenv("X402_PRICE_USDC", "$0.001")
 ENABLE_X402 = os.getenv("ENABLE_X402", "true").lower() == "true"
 
+# Legacy Polygon config (kept for watcher/relay backward compat)
 FACILITATOR_PRIVATE_KEY = os.getenv("FACILITATOR_PRIVATE_KEY")
 POLYGON_RPC = os.getenv("POLYGON_RPC", "https://polygon-rpc.com")
+
+# --- x402 MIDDLEWARE INITIALIZATION ---
+if ENABLE_X402 and X402_SDK_AVAILABLE and X402_PAY_TO:
+    try:
+        _facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=X402_FACILITATOR_URL))
+        _x402_server = x402ResourceServer(_facilitator)
+        _x402_server.register(X402_NETWORK, ExactEvmServerScheme())
+
+        _x402_routes = {
+            "POST /v1/chat/completions": RouteConfig(
+                accepts=[PaymentOption(
+                    scheme="exact",
+                    pay_to=X402_PAY_TO,
+                    price=X402_PRICE,
+                    network=X402_NETWORK,
+                )],
+                mime_type="application/json",
+                description="AI chat completions via Sovereign API",
+            ),
+        }
+
+        app.add_middleware(PaymentMiddlewareASGI, routes=_x402_routes, server=_x402_server)
+        print(f"✅ [x402] Middleware initialized: network={X402_NETWORK}, pay_to={X402_PAY_TO[:10]}..., price={X402_PRICE}")
+    except Exception as e:
+        print(f"⚠️  [x402] Middleware init failed: {e}")
+else:
+    if not X402_PAY_TO:
+        print("⚠️  [x402] Disabled: No X402_PAY_TO_ADDRESS set")
+    elif not X402_SDK_AVAILABLE:
+        print("⚠️  [x402] Disabled: SDK not installed")
+    elif not ENABLE_X402:
+        print("ℹ️  [x402] Disabled via ENABLE_X402=false")
 
 # --- USDC EIP-3009 CONFIG ---
 USDC_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
@@ -258,100 +327,27 @@ async def check_alby_payment_status(payment_hash: str):
 
 
 
-# --- x402 HELPER FUNCTIONS ---
-def verify_x402_payment(signature: str):
-    """
-    Verifies an x402 payment signature locally (EIP-191).
-    Since we are not using the Coinbase Facilitator API for Polygon,
-    we verify the user signed the intent message.
-    """
-    try:
-        # Reconstruct the expected message
-        # NOTE: This must match the client's SDK exactly.
-        msg = f"I authorize payment of 0.01 USDC to {wallet} on polygon-mainnet"
-        print(f"[x402] Verifying msg: '{msg}'")
-        
-        from eth_account.messages import encode_defunct
-        from eth_account import Account
-        
-        try:
-            signable_msg = encode_defunct(text=msg)
-            signer = Account.recover_message(signable_msg, signature=signature)
-            print(f"[x402] Recovered Signer: {signer}")
-            return {"paymentId": f"sig_{signature[:10]}", "payer": signer, "status": "verified"}
-        except Exception as e:
-            print(f"[x402] Recovery Error: {e}")
-            return None
-
-    except Exception as e:
-        print(f"[x402] Signature Verification Failed: {e}")
-        return None
-            
-        print(f"[x402] Settlement failed: {settle_resp.text}")
-        return None
-        
-    except Exception as e:
-        print(f"[x402] Error: {e}")
-        return None
-
-def get_x402_headers(price_sats: int):
-    """Returns the PAYMENT-REQUIRED headers for a 402 response."""
-    # Convert sats to USDC (approximate: 1 sat ~= $0.0006 at $60k BTC, but let's use fixed 1 cent for MVP)
-    # Ideally fetch real price, but for x402 simplicity we start with fixed tier.
-    price_usdc = "0.01"
-    wallet = X402_WALLET_ADDRESS or os.getenv("MY_WALLET_ADDRESS")
-    if not wallet:
-        wallet = "0x0000000000000000000000000000000000000000" # Placeholder if not set
-    
-    payment_request = {
-        "x402Version": "2.0",
-        "accepts": [
-            {
-                "scheme": "exact",
-                "network": "polygon-mainnet",
-                "price": price_usdc,
-                "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", # USDC on Polygon
-                "payTo": wallet
-            },
-            {
-                "scheme": "exact",
-                "network": "base-sepolia", 
-                "price": price_usdc,
-                "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e", # USDC on Base Sepolia
-                "payTo": wallet
-            }
-        ]
-    }
-    
-    encoded_json = base64.b64encode(json.dumps(payment_request).encode()).decode()
-    return {"PAYMENT-REQUIRED": encoded_json}
+# --- x402 HELPER: Handled by PaymentMiddlewareASGI ---
+# The x402 middleware automatically returns 402 with PAYMENT-REQUIRED headers
+# and verifies PAYMENT-SIGNATURE headers via the CDP facilitator.
+# No manual verify/headers functions needed.
 
 
-# --- MIDDLEWARE: TRI-BRID AUTH (Phase 10: x402 + Macaroon + Key) ---
+# --- MIDDLEWARE: AUTH (Macaroon + API Key + L402) ---
+# NOTE: x402 payments are now handled at the ASGI middleware level by PaymentMiddlewareASGI.
+# Requests that pay via x402 bypass this function entirely (middleware settles before reaching here).
+# This function only handles Macaroon and L402 auth for non-x402 requests.
 async def verify_payment_header(request: Request, cost_sats: int):
     """
-    Tri-brid authentication check:
-    1. x402 (PAYMENT-SIGNATURE) - Instant Guest Access
-    2. API Key (X-Sovereign-Api-Key) - Identity/License
-    3. Macaroon/L402 (Authorization) - Prepay Fuel
+    Authentication check (Macaroon + API Key + L402).
+    x402 is handled separately by PaymentMiddlewareASGI at ASGI level.
     
     Returns:
         (is_valid, auth_data)
         auth_data can be:
           - {"type": "macaroon", "new_token": ...}
-          - {"type": "x402", "receipt": ...}
           - {"status": 401/402, "error": ...} (Failure)
     """
-    
-    # === CHECK 0: x402 SIGNATURE (INSTANT GUEST MODE) ===
-    # This comes first to allow keyless access if enabled
-    x402_sig = request.headers.get("PAYMENT-SIGNATURE")
-    if ENABLE_X402 and x402_sig:
-        receipt = verify_x402_payment(x402_sig)
-        if receipt:
-            return True, {"type": "x402", "receipt": receipt}
-        # If sig exists but fails, return 402 to prompt retry
-        return False, {"status": 402, "error": "Invalid x402 Signature"}
 
     # === CHECK 1: API KEY (IDENTITY) ===
     api_key = request.headers.get("X-Sovereign-Api-Key")
@@ -470,15 +466,8 @@ async def chat_completions(request: Request):
         if isinstance(auth_data, str) and "Funds" in auth_data:
             return JSONResponse(status_code=402, content={"error": "Insufficient Funds in Token"})
 
-        # === 402: x402 / PAYMENT REQUIRED ===
-        # If enabled, prefer x402 headers over L402 invoice
-        if ENABLE_X402:
-            x402_headers = get_x402_headers(route_config["price_sats"])
-            return JSONResponse(
-                status_code=402,
-                content={}, # Empty body as per spec
-                headers=x402_headers
-            )
+        # === 402: x402 is handled by ASGI middleware ===
+        # If the request reaches here without x402 headers, fall through to L402
 
         # === 402: LEGACY L402 INVOICE (If x402 disabled) ===
         p_hash, invoice = await generate_real_invoice(route_config["price_sats"], f"Sovereign: {requested_model}")
@@ -722,6 +711,20 @@ if __name__ == "__main__":
                  sys.exit(0)
         except:
              pass
+
+    # --- x402 DISCOVERY ENDPOINT ---
+    @app.get("/v1/x402/info")
+    async def x402_info():
+        """Returns gateway x402 configuration for agent/client discovery."""
+        return {
+            "x402_enabled": ENABLE_X402 and X402_SDK_AVAILABLE and bool(X402_PAY_TO),
+            "version": "2.0",
+            "supported_networks": [X402_NETWORK] if X402_PAY_TO else [],
+            "price": X402_PRICE,
+            "pay_to": X402_PAY_TO or None,
+            "facilitator": X402_FACILITATOR_URL,
+            "docs": "https://docs.cdp.coinbase.com/x402/quickstart-for-buyers",
+        }
 
     print(f"Sovereign Mint (Universal Mode) starting on {PORT}...")
     try:
