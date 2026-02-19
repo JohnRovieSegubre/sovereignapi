@@ -346,8 +346,15 @@ async def verify_payment_header(request: Request, cost_sats: int):
         (is_valid, auth_data)
         auth_data can be:
           - {"type": "macaroon", "new_token": ...}
+          - {"type": "x402", "payment_payload": ...}
           - {"status": 401/402, "error": ...} (Failure)
     """
+
+    # === CHECK 0: x402 PAYMENT (already verified by ASGI middleware) ===
+    payment_payload = getattr(request.state, "payment_payload", None)
+    if payment_payload:
+        print(f"⚡ [x402] Payment verified by middleware — bypassing auth")
+        return True, {"type": "x402", "payment_payload": payment_payload}
 
     # === CHECK 1: API KEY (IDENTITY) ===
     api_key = request.headers.get("X-Sovereign-Api-Key")
@@ -485,11 +492,16 @@ async def chat_completions(request: Request):
     if isinstance(auth_data, dict) and auth_data.get("type") == "macaroon":
         response.headers["X-Sovereign-Balance-Token"] = auth_data["new_token"]
 
-    # x402 RECEIPT: Return the payment receipt
+    # x402 RECEIPT: Return the payment receipt (middleware handles settlement separately)
     if isinstance(auth_data, dict) and auth_data.get("type") == "x402":
-        receipt_json = json.dumps(auth_data["receipt"])
-        encoded_receipt = base64.b64encode(receipt_json.encode()).decode()
-        response.headers["PAYMENT-RESPONSE"] = encoded_receipt
+        payload = auth_data.get("payment_payload")
+        if payload:
+            try:
+                receipt_json = json.dumps(payload if isinstance(payload, dict) else str(payload))
+                encoded_receipt = base64.b64encode(receipt_json.encode()).decode()
+                response.headers["PAYMENT-RESPONSE"] = encoded_receipt
+            except Exception:
+                pass  # Non-critical — settlement handled by x402 middleware
 
     return response
 
