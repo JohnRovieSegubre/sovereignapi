@@ -10,7 +10,7 @@ USDC_CONTRACT_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
 MY_WALLET_ADDRESS = "0xC8Dc2795352cdedEF3a11f1fC9E360D85C5aAC4d"
 
 # TX to check (from user log)
-TX_HASH = "1d8d943ecac84c2108db04a486ea8cae7484e48c07703d12ed1d2d5c71455c8d"
+TX_HASH = "fbedeb207f40a733b125f9a09218d8dbfc1bc159f07c2b3d99bc8a3943b057c0"
 
 def check_tx():
     print(f"🔌 Connecting to {POLYGON_RPC}...")

@@ -37,7 +37,7 @@ API_KEY = os.getenv("SOVEREIGN_API_KEY")
 
 # Base Sepolia USDC contract
 BASE_SEPOLIA_USDC = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
-BASE_SEPOLIA_RPC = "https://sepolia.base.org"
+BASE_SEPOLIA_RPC = "https://base-sepolia.g.alchemy.com/v2/S__e1JUkM03zL4EonOpfV"
 BASE_SEPOLIA_CHAIN_ID = 84532
 
 # Minimal ERC20 ABI (balanceOf only)
@@ -130,19 +130,22 @@ def check_x402_info():
         return None
 
 
-def test_x402_payment():
+def test_x402_payment(skip_wallet=False):
     """Full x402 payment test: send request, get 402, auto-pay, get 200."""
     print("\n" + "=" * 60)
     print("🧪 FULL x402 PAYMENT TEST")
     print("=" * 60)
 
     # Step 1: Check wallet
-    address, usdc_balance = check_wallet()
-    if not address:
-        return False
-    if usdc_balance < 0.001:
-        print("\n❌ Cannot proceed: insufficient USDC. Fund wallet first.")
-        return False
+    if not skip_wallet:
+        address, usdc_balance = check_wallet()
+        if not address:
+            return False
+        if usdc_balance < 0.001:
+            print("\n❌ Cannot proceed: insufficient USDC. Fund wallet first.")
+            return False
+    else:
+        print("⚠️  Skipping wallet check (assuming funded)...")
 
     # Step 2: Check gateway
     info = check_x402_info()
@@ -212,6 +215,51 @@ def test_x402_payment():
         return False
 
 
+
+def test_topup_flow():
+    """Test x402 refueling (buying a macaroon)."""
+    print("\n" + "-" * 60)
+    print("⛽ TESTING x402 REFUELING (Topup Endpoint)")
+    print("-" * 60)
+
+    url = f"{GATEWAY_URL.rstrip('/')}/balance/topup"
+    print(f"🚀 Requesting topup ($1.00)...")
+    print(f"   → POST {url}")
+
+    from x402 import x402ClientSync
+    from x402.http.clients import x402_requests
+    from x402.mechanisms.evm import EthAccountSigner
+    from x402.mechanisms.evm.exact.register import register_exact_evm_client
+    from eth_account import Account
+
+    client = x402ClientSync()
+    account = Account.from_key(AGENT_PRIVATE_KEY)
+    register_exact_evm_client(client, EthAccountSigner(account))
+    session = x402_requests(client)
+
+    try:
+        resp = session.post(url, json={}, headers={"Content-Type": "application/json"}, timeout=120)
+        
+        print(f"   ← Status: {resp.status_code}")
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            token = data.get("token")
+            credits = data.get("credits_sats")
+            print(f"\n✅ REFUEL SUCCESSFUL!")
+            print(f"   Credits: {credits} sats")
+            print(f"   Token:   {token[:20]}...")
+            return True
+        else:
+            print(f"\n❌ Refuel Failed: {resp.status_code}")
+            print(f"   Body: {resp.text[:500]}")
+            return False
+            
+    except Exception as e:
+        print(f"\n❌ Refuel Request Failed: {e}")
+        return False
+
+
 def main():
     print("=" * 60)
     print("🔬 Sovereign x402 Payment Test Suite")
@@ -222,17 +270,32 @@ def main():
 
     args = sys.argv[1:]
 
+    skip_check = "--skip-check" in args
+
     if "--check-only" in args:
         check_wallet()
     elif "--info-only" in args:
         check_x402_info()
     else:
-        success = test_x402_payment()
-        print("\n" + "=" * 60)
-        if success:
-            print("🎉 ALL TESTS PASSED — x402 is live!")
+        # Run both tests
+        if not skip_check:
+            address, usdc = check_wallet()
+            if usdc < 0.001:
+                print("\n❌ Cannot proceed: insufficient USDC. Fund wallet first.")
+                s1 = False
+            else:
+                s1 = test_x402_payment()
         else:
-            print("💔 TEST FAILED — See errors above.")
+            print("⚠️  Skipping wallet check...")
+            s1 = test_x402_payment(skip_wallet=True)
+
+        s2 = test_topup_flow()
+        
+        print("\n" + "=" * 60)
+        if s1 and s2:
+            print("🎉 ALL WORKFLOWS PASSED (Chat + Refuel)!")
+        else:
+            print("💔 SOME TESTS FAILED.")
         print("=" * 60)
 
 

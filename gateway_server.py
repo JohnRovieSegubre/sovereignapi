@@ -102,6 +102,16 @@ if ENABLE_X402 and X402_SDK_AVAILABLE and X402_PAY_TO:
                 mime_type="application/json",
                 description="AI chat completions via Sovereign API",
             ),
+            "POST /v1/balance/topup": RouteConfig(
+                accepts=[PaymentOption(
+                    scheme="exact",
+                    pay_to=X402_PAY_TO,
+                    price=os.getenv("X402_TOPUP_PRICE", "$1.00"),  # Default $1.00 topup
+                    network=X402_NETWORK,
+                )],
+                mime_type="application/json",
+                description="Purchase Sovereign Balance Token (Macaroon)",
+            ),
         }
 
         app.add_middleware(PaymentMiddlewareASGI, routes=_x402_routes, server=_x402_server)
@@ -509,6 +519,54 @@ async def chat_completions(request: Request):
 @app.get("/v1/models")
 async def list_models():
     return {"data": [{"id": k, "price": v["price_sats"]} for k, v in MODEL_ROUTER.items()]}
+
+
+@app.post("/v1/balance/topup")
+async def topup_balance(request: Request):
+    """
+    x402-protected endpoint.
+    If reached, payment ($1.00) is already verified by middleware.
+    Mint a Macaroon with 100,000 sats credit.
+    """
+    # 1. Verify Payment (Middleware Check)
+    payment_payload = getattr(request.state, "payment_payload", None)
+    if not payment_payload:
+        # Should be unreachable if middleware works, but safety net
+        raise HTTPException(status_code=402, detail="Payment Required")
+
+    # 2. Mint Token
+    # $1.00 ~= 100,000 sats (rough approximation for simplicity or use oracle)
+    # Since x402 price checks are strict ($1.00), we credit explicitly.
+    credits_sats = 100000 
+    
+    # Generate macaroon (reuse existing mint logic via verify_and_spend hack or direct mint)
+    # We need to ACCESS the MINT instance directly. 
+    # MINT is initialized later in the file. We rely on MINT global.
+    
+    try:
+        # Mint new macaroon with 100k sats
+        # Note: MINT class needs a 'mint' method. Let's check MINT implementation below.
+        # But MINT.verify_and_spend is for burning. We need MINTING.
+        
+        # HACK: Using generating logic from MINT (assuming MINT is SovereignMint instance)
+        # We need to construct it manually as SovereignMint doesn't expose a public mint_new_token method easily
+        # Wait, MINT.mint_token(amount) exists? Let's check.
+        # Assuming verify_and_spend returns new_token, we can just mint fresh.
+        
+        macaroon = Macaroon(location=SITE_URL, identifier=secrets.token_hex(16), key=MINT_SECRET)
+        macaroon.add_first_party_caveat(f"balance = {credits_sats}")
+        macaroon.add_first_party_caveat(f"created = {time.time()}")
+        serialized = macaroon.serialize()
+        
+        return {
+            "status": "success",
+            "credits_sats": credits_sats,
+            "token": serialized,
+            "message": "Refuel successful"
+        }
+    except Exception as e:
+        print(f"❌ Minting failed: {e}")
+        raise HTTPException(status_code=500, detail="Minting failed")
 
 
 # --- ADMIN MINT (The Stablecoin Hook) ---

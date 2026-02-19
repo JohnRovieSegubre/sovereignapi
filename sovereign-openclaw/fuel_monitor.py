@@ -66,20 +66,21 @@ class FuelMonitor:
             return False
 
         try:
-            logger.info(f"⛽ Refueling: sending ${self.REFUEL_AMOUNT_USD} USDC...")
-            tx_hash = self.client._send_usdc(self.REFUEL_AMOUNT_USD)
-            logger.info(f"📬 Claiming macaroon for tx: {tx_hash[:16]}...")
-            new_token = self.client._claim_macaroon(tx_hash)
-            self.client.token = new_token
-
-            self.state["total_refuels"] += 1
-            self.state["total_spent_usd"] += self.REFUEL_AMOUNT_USD
-            self.state["last_refuel_time"] = time.time()
-            self.state["last_known_balance"] = self.get_balance()
-            self._save_state()
-
-            logger.info(f"✅ Refueled! Total refuels: {self.state['total_refuels']}")
-            return True
+            logger.info(f"⛽ Refueling via client.refuel_balance()...")
+            new_token = self.client.refuel_balance()
+            
+            if new_token:
+                self.client.token = new_token
+                self.state["total_refuels"] += 1
+                self.state["total_spent_usd"] += self.REFUEL_AMOUNT_USD
+                self.state["last_refuel_time"] = time.time()
+                self.state["last_known_balance"] = self.get_balance()
+                self._save_state()
+                logger.info(f"✅ Refueled! Total refuels: {self.state['total_refuels']}")
+                return True
+            else:
+                logger.error("❌ Refuel failed: No token returned")
+                return False
 
         except Exception as e:
             logger.error(f"❌ Refuel failed: {e}")

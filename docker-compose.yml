@@ -4,11 +4,14 @@ services:
   gateway:
     build: .
     container_name: sovereign_gateway
-    command: python gateway_server.py
+    command: python -u gateway_server.py
     ports:
       - "80:8000"
     volumes:
       - ./data:/app/.agent
+      - ./.env:/app/.env:ro
+    env_file:
+      - .env
     environment:
       # Core Secrets
       - MINT_SECRET=${MINT_SECRET}
