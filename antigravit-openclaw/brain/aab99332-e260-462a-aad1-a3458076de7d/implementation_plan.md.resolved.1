@@ -1,0 +1,28 @@
+# Antigravity Extensibility Plan
+
+## Goal Description
+The user wants to create "agents" within Google Antigravity. In this system, "agents" are best represented by **Workflows** (defined processes) and **Skills** (specialized capabilities). I will demonstrate how to create both.
+
+## Concepts
+
+### 1. Workflows
+- **What**: Automated sequences of steps to achieve a goal (e.g., "Deploy App", "Refactor Code").
+- **Where**: `.agent/workflows/[name].md`
+- **Format**: Markdown with YAML frontmatter.
+- **Usage**: Good for repeatable, multi-step tasks.
+
+### 2. Skills
+- **What**: specialized bundles of instructions and resources that the agent can "learn" to handle complex domains.
+- **Where**: Arbitrary directories containing a `SKILL.md`.
+- **Format**: `SKILL.md` defines the skill's capabilities and instructions.
+- **Usage**: Good for adding deep knowledge or specialized behavior (e.g., "Angular Expert", "Database Admin").
+
+## Proposed Demonstration
+I will create a dummy examples of both in the current workspace to show the user how they work.
+
+### Files to Create
+- `[NEW] .agent/workflows/hello_world.md`: A simple workflow.
+- `[NEW] skills/greeter/SKILL.md`: A simple skill definition.
+
+## Verification
+- User can view the created files to understand the structure.

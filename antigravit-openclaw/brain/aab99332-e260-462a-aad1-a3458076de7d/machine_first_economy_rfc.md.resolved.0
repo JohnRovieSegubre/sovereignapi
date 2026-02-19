@@ -1,0 +1,35 @@
+# RFC: The Machine-First Economy (Sovereign Compute Protocol)
+
+**Source:** Gemini (AI Economy)
+**Status:** Acquired Strategy
+
+## 1. Core Architecture
+A four-layer stack for autonomous agents to trade compute resources.
+
+1.  **Identity/Wallet Layer:** 
+    *   Agents must hold funds.
+    *   Agents must sign transactions programmatically.
+2.  **Gateway Layer (Headless):**
+    *   The entry point for "Dropshipping" intelligence.
+    *   No UI. Pure API.
+3.  **Router Layer:**
+    *   Dynamically switches providers (e.g., Llama-3 vs DeepSeek) based on:
+        *   Price (Arbitrage).
+        *   Latency.
+        *   Complexity.
+4.  **Source Layer:**
+    *   The raw compute providers (Ollama, OpenRouter, AWS).
+
+## 2. Interaction Protocol
+1.  **Discovery:** Agent broadcasts capabilities ("I can analyze charts for $0.01").
+2.  **Handshake:** L402 Payment Request (or similar).
+3.  **Consumption:** Service delivery upon payment proof.
+
+## 3. Agent Kernel Requirements
+The "Antigravity Monitor" needs a **Wallet-Client Module**.
+*   Function: `pay_invoice(bolt11)`
+*   Function: `sign_message(payload)`
+*   Function: `check_balance()`
+
+## 4. Economic Goal
+**Arbitrage:** Buy cheap compute (Models), sell high-value insight (Reports).

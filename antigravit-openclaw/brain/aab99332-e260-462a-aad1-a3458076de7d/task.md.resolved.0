@@ -1,0 +1,11 @@
+# Tasks
+
+- [ ] Design Agent Structure <!-- id: 0 -->
+    - [ ] Create Implementation Plan <!-- id: 1 -->
+    - [ ] Confirm Tech Stack (Python/JS, LLM Provider) <!-- id: 2 -->
+- [ ] Implement Basic Agent <!-- id: 3 -->
+    - [ ] Setup virtual environment <!-- id: 4 -->
+    - [ ] Create agent core loop <!-- id: 5 -->
+    - [ ] Add basic tools <!-- id: 6 -->
+- [ ] Verify Agent <!-- id: 7 -->
+    - [ ] Run test queries <!-- id: 8 -->

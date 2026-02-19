@@ -1,0 +1,14 @@
+qrcod# Wallet
+eth-account
+web3
+
+# API
+httpx
+fastapi
+uvicorn
+python-multipart
+pymacaroons
+
+# Agent
+python-dotenv
+requests

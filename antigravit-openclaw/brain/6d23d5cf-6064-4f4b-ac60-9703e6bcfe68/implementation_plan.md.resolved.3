@@ -1,0 +1,69 @@
+# Phase 2 A/B Test Configuration: "Chop Survival"
+
+## Goal
+Address the "strategy gap" identified in Phase 1 (choppy regime losses) by implementing hybrids that account for shorter move durations.
+
+## New 'Phase 2' Hybrids
+
+### 1. `scalp_hybrid` (Mean Reversion Scalper)
+**Logic:** Use high-conviction OFI signals (whale backing) but exit QUICKLY to bank profits before the chop reverses.
+- **Entry:** Binance OFI + Velocity (Standard Scalper)
+- **Exit:** Tight Take Profits (6% / 10%) + FV Reversion (Re-enabled but with wider stops)
+- **Why:** Fits the "flicker" nature of the current market.
+
+```python
+"scalp_hybrid": {
+    "description": "OFI Scalper + Mean Reversion Targets (Phase 2)",
+    "strategies": {
+        "momentum": False,
+        "price_velocity": True,
+        "binance_ofi": True,
+        "polymarket_ofi": False,
+        "volume_profile": False,
+        "obv_divergence": False,
+        "vol_regime": True,
+        "vol_percentile": False,
+    },
+    "params": {
+        "BUY_ENTRY_EDGE": 0.008,
+        "TAKE_PROFIT_1": 6.0,      # Bank early
+        "TAKE_PROFIT_2": 10.0,
+        "FV_REVERSION_EXIT": True, # Re-enable for mean reversion logic
+        "STOP_LOSS_PCT": -15.0,    # Tighter stop
+    }
+}
+```
+
+### 2. `filtered_trend_rider` (High Conviction Trend)
+**Logic:** Only enter if the move is massive (High Edge + High Amp), ignoring all minor noise.
+- **Entry:** Very High `BUY_ENTRY_EDGE` (1.2%) + High `ENTRY_AMP_THRESHOLD` (1.06)
+- **Exit:** Trailing Stop (Tight 3%) to protect against sharp reversals.
+- **Why:** If we can't scalp the chop, we must filter it out entirely.
+
+```python
+"filtered_trend_rider": {
+    "description": "High Barrier Entry + Tight Trail (Phase 2)",
+    "strategies": {
+        "momentum": True,
+        "price_velocity": True,
+        "binance_ofi": True,
+        "polymarket_ofi": False,
+        "volume_profile": True,
+        "obv_divergence": True,
+        "vol_regime": True,
+        "vol_percentile": False,
+    },
+    "params": {
+        "BUY_ENTRY_EDGE": 0.012,     # 1.2% Edge (Very High)
+        "ENTRY_AMP_THRESHOLD": 1.06, # High Conviction
+        "TRAILING_STOP_ACTIVATION": 4.0,
+        "TRAILING_STOP_DISTANCE": 3.0,
+        "TAKE_PROFIT_1": 20.0,       # Still aim high if we catch a runner
+    }
+}
+```
+
+## Execution Steps
+1. Add new configs to [strategy_ab_tester.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py).
+2. Update `velocity_trend_rider` (keep as control).
+3. Clear logs and restart A/B test.

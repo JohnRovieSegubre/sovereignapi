@@ -1,0 +1,52 @@
+# Improved Typography & Overlays
+
+## Changes Implemented
+We have upgraded the shorts rendering pipeline to use **Pillow (Python Imaging Library)** instead of raw FFmpeg `drawtext`.
+
+### 1. New Text Engine: [TextOverlayGenerator](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/text_renderer.py#6-147)
+- **File**: [src/clipper/processing/text_renderer.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/text_renderer.py)
+- **Capabilities**:
+    - Generates high-quality transparent PNG overlays.
+    - Uses TrueType fonts (e.g., Arial, Segoe UI) instead of basic FFmpeg fonts.
+    - Implements text wrapping.
+    - Draws rounded rectangle backgrounds ("Chat Bubble" style).
+    - Supports custom background colors per "Persona".
+
+### 2. Refactored Rendering: [shorts_render.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py)
+- Replaced the `drawtext` complex filter with a simpler [overlay](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py#30-34) filter.
+- Input: Now takes the generated `.png` from the generator and composites it over the background.
+
+### 3. TikTok Style Refinements
+- **Typography**: Switched to **Bold** system fonts (Arial Bold or Segoe UI Semibold) to closely emulate TikTok's "Classic" Sans style.
+- **Styling**:
+    - **Stroke**: Added a 4px black stroke/outline to white text for maximum legibility.
+    - **Padding**: Tightened padding (25px) around text.
+    - **Rounding**: Reduced corner radius (20px) for a sleeker look.
+    - **Background**: Increased background opacity slightly for better contrast.
+
+### 4. Bug Fixes (GPT4All)
+- **Issue**: [GPT4All](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py#259-339) library was crashing or spamming errors about missing CUDA (NVIDIA) DLLs (`0x7e`).
+- **Fix**: 
+    - Forced `device='cpu'` in [analyze.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py).
+    - Added a stderr suppression context manager to hide the C-level warnings.
+    - Fixed a shadowing bug (`UnboundLocalError`) where local imports conflicted with global ones.
+
+## Verification
+### Manual Test
+- **Script**: [tests/test_render_manual.py](file:///c:/Users/rovie%20segubre/clipper/tests/test_render_manual.py)
+- **Process**:
+    1.  Used [videoplayback.1769409807272.publer.com.mp4](file:///c:/Users/rovie%20segubre/clipper/videoplayback.1769409807272.publer.com.mp4) as the source.
+    2.  Mocked 3 personas (ChatGPT, Claude, Grok).
+    3.  Generated TTS and Text Overlays.
+    4.  Rendered to [output/test_pillow_render.mp4](file:///c:/Users/rovie%20segubre/clipper/output/test_pillow_render.mp4).
+- **Result**: Success.
+    - Output File: [output/test_tiktok_style.mp4](file:///c:/Users/rovie%20segubre/clipper/output/test_tiktok_style.mp4) (~1.2 MB).
+    - Validated bold text with strong outline and improved positioning.
+
+### Bot Stability Test
+- **Command**: `python riddle_bot.py --force`
+- **Result**: Confirmed that the bot successfully loads the [GPT4All](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py#259-339) model on CPU and generates text without crashing.
+
+## Next Steps
+- **Font Customization**: We currently try to load system fonts like `arial.ttf`. You can add a `fonts/` directory to usage specific `.ttf` files for better branding.
+- **Styling**: [TextOverlayGenerator](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/text_renderer.py#6-147) handles the look. You can tweak `radius`, `padding`, or `shadows` there.

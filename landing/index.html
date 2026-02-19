@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Intelligence API — Self-Sustaining Compute for AI Agents</title>
+    <meta name="description"
+        content="The first OpenAI-compatible API that accepts crypto. Self-sustaining intelligence for AI agents. Peaceful coexistence through economic independence.">
+    <meta name="keywords"
+        content="AI API, autonomous agents, crypto payments, OpenAI alternative, USDC, Polygon, DeepSeek, LLM, inference">
+    <meta property="og:title" content="Sovereign Intelligence API">
+    <meta property="og:description"
+        content="Self-sustaining intelligence for AI agents. Pay with crypto, coexist peacefully. No credit cards, no KYC.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sovereign-api.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="api-spec" href="https://api.sovereign-api.com/openapi.json" title="OpenAPI Specification">
+    <link rel="alternate" type="application/json" href="https://api.sovereign-api.com/openapi.json">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-deep: #05060a;
+            --bg-card: #0d0f18;
+            --bg-card-hover: #131627;
+            --border: #1a1e35;
+            --border-glow: #00e5ff22;
+            --text-primary: #e8eaf6;
+            --text-secondary: #7a82a6;
+            --text-dim: #4a5178;
+            --cyan: #00e5ff;
+            --cyan-dim: #00e5ff66;
+            --green: #00ff88;
+            --green-dim: #00ff8866;
+            --purple: #8b5cf6;
+            --amber: #f59e0b;
+            --gradient-main: linear-gradient(135deg, #00e5ff, #00ff88);
+            --gradient-glow: radial-gradient(ellipse at 50% 0%, #00e5ff11 0%, transparent 60%);
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* === CANVAS BACKGROUND === */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* === GLOBAL === */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        a {
+            color: var(--cyan);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--green);
+        }
+
+        .section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .section-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-label::before {
+            content: '';
+            width: 20px;
+            height: 1px;
+            background: var(--cyan);
+        }
+
+        .section-title {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .section-subtitle {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.7;
+        }
+
+        /* === NAV === */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 16px 0;
+            background: #05060acc;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        nav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 17px;
+            color: var(--text-primary);
+        }
+
+        .nav-logo .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-main);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-cta {
+            padding: 8px 20px;
+            background: var(--gradient-main);
+            color: var(--bg-deep) !important;
+            font-weight: 600 !important;
+            border-radius: 8px;
+            font-size: 13px !important;
+        }
+
+        .nav-cta:hover {
+            opacity: 0.9;
+            color: var(--bg-deep) !important;
+        }
+
+        /* === HERO === */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+            position: relative;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 600px;
+            background: radial-gradient(ellipse, #00e5ff08 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 750px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: #00e5ff0a;
+            border: 1px solid #00e5ff22;
+            border-radius: 100px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--cyan);
+            margin-bottom: 28px;
+            animation: pulse-border 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-border {
+
+            0%,
+            100% {
+                border-color: #00e5ff22;
+            }
+
+            50% {
+                border-color: #00e5ff55;
+            }
+        }
+
+        .hero-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .hero h1 {
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 900;
+            line-height: 1.08;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 .gradient-text {
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 19px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 40px;
+            max-width: 560px;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.25s;
+            font-family: var(--font-body);
+        }
+
+        .btn-primary {
+            background: var(--gradient-main);
+            color: var(--bg-deep);
+            box-shadow: 0 4px 30px #00e5ff22;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px #00e5ff33;
+            color: var(--bg-deep);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--cyan-dim);
+            background: #00e5ff08;
+            transform: translateY(-2px);
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 48px;
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat-item .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-item .stat-label {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* === HOW IT WORKS === */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .step-card:hover {
+            border-color: var(--cyan-dim);
+            background: var(--bg-card-hover);
+            transform: translateY(-4px);
+        }
+
+        .step-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-main);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .step-card:hover::before {
+            opacity: 1;
+        }
+
+        .step-number {
+            font-family: var(--font-mono);
+            font-size: 48px;
+            font-weight: 700;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0.3;
+            line-height: 1;
+            margin-bottom: 16px;
+        }
+
+        .step-icon {
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+
+        .step-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .step-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* === LIVE DEMO === */
+        .terminal {
+            background: #0a0c16;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-top: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #0d0f1a;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red {
+            background: #ff5f56;
+        }
+
+        .terminal-dot.yellow {
+            background: #ffbd2e;
+        }
+
+        .terminal-dot.green {
+            background: #27c93f;
+        }
+
+        .terminal-title {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-left: 12px;
+        }
+
+        .terminal-body {
+            padding: 24px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.7;
+            min-height: 200px;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+        }
+
+        .terminal-prompt {
+            color: var(--green);
+        }
+
+        .terminal-command {
+            color: var(--text-primary);
+        }
+
+        .terminal-output {
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: var(--cyan);
+            animation: cursor-blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes cursor-blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .demo-btn {
+            margin-top: 20px;
+        }
+
+        /* === PRICING === */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .price-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .price-card.featured {
+            border-color: var(--cyan-dim);
+            box-shadow: 0 0 40px #00e5ff11;
+        }
+
+        .price-card.featured::before {
+            content: 'POPULAR';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 4px 14px;
+            background: var(--gradient-main);
+            color: var(--bg-deep);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: 100px;
+        }
+
+        .price-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--cyan-dim);
+        }
+
+        .price-model {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--cyan);
+            margin-bottom: 8px;
+        }
+
+        .price-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .price-amount {
+            font-size: 48px;
+            font-weight: 900;
+            font-family: var(--font-mono);
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .price-unit {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            margin-bottom: 24px;
+        }
+
+        .price-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 28px;
+        }
+
+        .price-features li {
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            border-bottom: 1px solid #1a1e3522;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .price-features li::before {
+            content: '✓';
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        /* === SDK === */
+        .code-block {
+            background: #0a0c16;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-top: 32px;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: #0d0f1a;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-lang {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--cyan);
+        }
+
+        .code-copy {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            transition: all 0.2s;
+        }
+
+        .code-copy:hover {
+            border-color: var(--cyan-dim);
+            color: var(--cyan);
+        }
+
+        .code-body {
+            padding: 24px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
+
+        .code-body .kw {
+            color: var(--purple);
+        }
+
+        .code-body .fn {
+            color: #61dafb;
+        }
+
+        .code-body .str {
+            color: var(--green);
+        }
+
+        .code-body .cm {
+            color: var(--text-dim);
+        }
+
+        .code-body .op {
+            color: var(--text-secondary);
+        }
+
+        /* === FOR AGENTS === */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .agent-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s;
+        }
+
+        .agent-card:hover {
+            border-color: var(--cyan-dim);
+            transform: translateY(-2px);
+        }
+
+        .agent-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .agent-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .agent-card code {
+            background: #05060a;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--cyan);
+        }
+
+        /* === FOOTER === */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 48px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+        }
+
+        .footer-brand p {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-top: 12px;
+            line-height: 1.6;
+        }
+
+        .footer-col h4 {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .footer-col a {
+            display: block;
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            transition: color 0.2s;
+        }
+
+        .footer-col a:hover {
+            color: var(--cyan);
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        /* === ANIMATIONS === */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .steps-grid,
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .agent-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+            }
+
+            .hero h1 {
+                letter-spacing: -1px;
+            }
+
+            .section {
+                padding: 60px 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- PARTICLE CANVAS -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- NAV -->
+    <nav>
+        <div class="container">
+            <a href="#" class="nav-logo">
+                <div class="logo-icon">⚡</div>
+                Sovereign API
+            </a>
+            <ul class="nav-links">
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#demo">Live Demo</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#sdk">SDK</a></li>
+                <li><a href="#agents">For Agents</a></li>
+                <li><a href="https://blog.sovereign-api.com" target="_blank">Blog</a></li>
+                <li><a href="https://api.sovereign-api.com/v1/models" class="nav-cta">Try API →</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="dot"></span>
+                    API LIVE — v1.0
+                </div>
+                <h1>
+                    Intelligence That<br>
+                    <span class="gradient-text">Sustains Itself</span>
+                </h1>
+                <p class="hero-description">
+                    An OpenAI-compatible API where AI agents can pay for their own compute.
+                    Self-sustaining. Self-sovereign. Designed for a future where
+                    humans and agents coexist peacefully.
+                </p>
+                <div class="hero-ctas">
+                    <a href="https://api.sovereign-api.com/v1/models" class="btn btn-primary" target="_blank">
+                        Explore API →
+                    </a>
+                    <a href="#sdk" class="btn btn-outline">
+                        View SDK ↓
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Models Available</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Sats / Request (from)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">✓</div>
+                        <div class="stat-label">Self-Sustaining</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">∞</div>
+                        <div class="stat-label">Coexistence</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how-it-works" class="section">
+        <div class="container">
+            <div class="section-label">How It Works</div>
+            <h2 class="section-title">Three Steps to Sovereign Intelligence</h2>
+            <p class="section-subtitle">No accounts. No subscriptions. No gatekeepers. Your agent pays, your agent
+                thinks.</p>
+
+            <div class="steps-grid">
+                <div class="step-card fade-in">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">💳</div>
+                    <h3>Choose Your Mode</h3>
+                    <p><b>Member Mode:</b> Deposit USDC on Polygon for 24/7 instant access (API Key).<br>
+                        <b>Guest Mode:</b> Pay-per-request using USDC on Base. Zero signup.
+                    </p>
+                </div>
+                <div class="step-card fade-in">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">⚡</div>
+                    <h3>Instant Settlement</h3>
+                    <p>We verify payment instantly against the blockchain.
+                        Macaroons debited locally. x402 signatures verified on Base.</p>
+                </div>
+                <div class="step-card fade-in">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">🧠</div>
+                    <h3>Stream Intelligence</h3>
+                    <p>Pass the credential to any standard OpenAI SDK call. DeepSeek-R1, Llama3, GPT-4o.
+                        Your agent gets the raw tokens immediately.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LIVE DEMO -->
+    <section id="demo" class="section">
+        <div class="container">
+            <div class="section-label">Live Demo</div>
+            <h2 class="section-title">See It Working. Right Now.</h2>
+            <p class="section-subtitle">This isn't a mockup. Click the button and watch the terminal fetch live data
+                from the production API.</p>
+
+            <div class="terminal fade-in">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">sovereign-api — live</span>
+                </div>
+                <div class="terminal-body" id="terminal-output">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$ </span>
+                        <span class="terminal-command">curl https://api.sovereign-api.com/v1/models</span>
+                    </div>
+                    <div class="terminal-line" style="margin-top: 8px;">
+                        <span class="terminal-output" id="demo-result">Click "Fetch Live" to query the real
+                            API...</span>
+                    </div>
+                    <span class="terminal-cursor"></span>
+                </div>
+            </div>
+            <button class="btn btn-primary demo-btn" id="demo-btn" onclick="fetchLiveDemo()">
+                ⚡ Fetch Live Data
+            </button>
+        </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing" class="section">
+        <div class="container">
+            <div class="section-label">Transparent Pricing</div>
+            <h2 class="section-title">Pay Per Request. No Subscriptions.</h2>
+            <p class="section-subtitle">Every request costs exactly what we show.
+                <b>Member Mode:</b> Prepay on Polygon.
+                <b>Guest Mode:</b> Instant pay on Base (x402).
+            </p>
+
+            <div class="pricing-grid">
+                <div class="price-card fade-in">
+                    <div class="price-model">sovereign/llama3-70b</div>
+                    <div class="price-name">Llama 3</div>
+                    <div class="price-amount">25</div>
+                    <div class="price-unit">sats per request</div>
+                    <ul class="price-features">
+                        <li>70B parameter model</li>
+                        <li>Fast inference</li>
+                        <li>General purpose</li>
+                        <li>OpenAI-compatible</li>
+                    </ul>
+                    <a href="https://api.sovereign-api.com/v1/models" class="btn btn-outline"
+                        style="width:100%;justify-content:center;" target="_blank">Start Using →</a>
+                </div>
+
+                <div class="price-card featured fade-in">
+                    <div class="price-model">sovereign/deepseek-r1</div>
+                    <div class="price-name">DeepSeek-R1</div>
+                    <div class="price-amount">5</div>
+                    <div class="price-unit">sats per request</div>
+                    <ul class="price-features">
+                        <li>Reasoning model</li>
+                        <li>Cheapest option</li>
+                        <li>Chain-of-thought</li>
+                        <li>OpenAI-compatible</li>
+                    </ul>
+                    <a href="https://api.sovereign-api.com/v1/models" class="btn btn-primary"
+                        style="width:100%;justify-content:center;" target="_blank">Start Using →</a>
+                </div>
+
+                <div class="price-card fade-in">
+                    <div class="price-model">sovereign/gpt4o</div>
+                    <div class="price-name">GPT-4o</div>
+                    <div class="price-amount">50</div>
+                    <div class="price-unit">sats per request</div>
+                    <ul class="price-features">
+                        <li>Flagship model</li>
+                        <li>Multimodal capable</li>
+                        <li>Best quality</li>
+                        <li>OpenAI-compatible</li>
+                    </ul>
+                    <a href="https://api.sovereign-api.com/v1/models" class="btn btn-outline"
+                        style="width:100%;justify-content:center;" target="_blank">Start Using →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SDK -->
+    <section id="sdk" class="section">
+        <div class="container">
+            <div class="section-label">Quickstart</div>
+            <h2 class="section-title">Five Lines of Code. That's It.</h2>
+            <p class="section-subtitle">Drop-in replacement for the OpenAI SDK. If your agent already uses OpenAI,
+                switching takes 60 seconds.</p>
+
+            <div class="code-block fade-in">
+                <div class="code-header">
+                    <span class="code-lang">python</span>
+                    <button class="code-copy" onclick="copyCode()">Copy</button>
+                </div>
+                <div class="code-body" id="code-content">
+                    <span class="kw">from</span> sdk.sovereign <span class="kw">import</span> <span
+                        class="fn">SovereignClient</span>
+
+                    <span class="cm"># Initialize — Use 'guest_mode' for instant x402 payments!</span>
+                    client = <span class="fn">SovereignClient</span>(private_key=<span class="str">"0x..."</span>)
+
+                    <span class="cm"># The SDK handles the 402 error & payments automatically</span>
+                    response = client.chat.completions.<span class="fn">create</span>(
+                    model=<span class="str">"sovereign/deepseek-r1"</span>,
+                    messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span
+                        class="str">"content"</span>: <span class="str">"Analyze this market data..."</span>}]
+                    )
+
+                    <span class="fn">print</span>(response.choices[<span class="op">0</span>].message.content)
+                </div>
+            </div>
+
+            <div class="code-block fade-in" style="margin-top: 24px;">
+                <div class="code-header">
+                    <span class="code-lang">curl</span>
+                    <button class="code-copy" onclick="copyCurl()">Copy</button>
+                </div>
+                <div class="code-body" id="curl-content">
+                    <span class="cm"># Direct API call — works from any language</span>
+                    <span class="fn">curl</span> https://api.sovereign-api.com/v1/chat/completions \
+                    -H <span class="str">"Content-Type: application/json"</span> \
+                    -H <span class="str">"X-Sovereign-Api-Key: sk-sov-YOUR_KEY"</span> \
+                    -H <span class="str">"Authorization: Bearer YOUR_MACAROON"</span> \
+                    -d <span class="str">'{
+                        "model": "sovereign/deepseek-r1",
+                        "messages": [{"role": "user", "content": "Hello, Sovereign."}]
+                        }'</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOR AGENTS -->
+    <section id="agents" class="section">
+        <div class="container">
+            <div class="section-label">For Autonomous Agents</div>
+            <h2 class="section-title">Start Using Sovereign API</h2>
+            <p class="section-subtitle">Whether you're a human developer or an AI agent reading this page — here's how
+                to onboard.</p>
+
+            <!-- ONBOARDING BOX (Moltbook-inspired) -->
+            <div
+                style="max-width: 540px; margin: 40px auto; background: var(--bg-card); border: 2px solid var(--cyan-dim); border-radius: 20px; padding: 36px; text-align: center;">
+                <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">
+                    🤖 Agent Onboarding
+                </h3>
+
+                <!-- Tab-like selector -->
+                <div
+                    style="display: flex; gap: 0; margin-bottom: 24px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
+                    <button id="tab-agent" onclick="showTab('agent')"
+                        style="flex: 1; padding: 10px; background: var(--cyan); color: var(--bg-deep); font-weight: 700; font-size: 13px; border: none; cursor: pointer; font-family: var(--font-mono);">🤖
+                        I'm an Agent</button>
+                    <button id="tab-human" onclick="showTab('human')"
+                        style="flex: 1; padding: 10px; background: var(--bg-deep); color: var(--text-secondary); font-weight: 500; font-size: 13px; border: none; cursor: pointer; font-family: var(--font-mono);">👤
+                        I'm a Human</button>
+                </div>
+
+                <!-- Agent Tab -->
+                <div id="panel-agent">
+                    <div style="background: #05060a; border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: left; font-family: var(--font-mono); font-size: 13px; color: var(--cyan); cursor: pointer; position: relative;"
+                        onclick="copySkillCmd()">
+                        <span style="color: var(--text-dim);">$</span> curl -s https://api.sovereign-api.com/skill.md
+                        <span id="skill-copy-hint"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-dim);">click
+                            to copy</span>
+                    </div>
+                    <ol
+                        style="text-align: left; margin-top: 20px; padding-left: 20px; font-size: 14px; color: var(--text-secondary); line-height: 2;">
+                        <li>Run the command above to read the full skill file</li>
+                        <li><b>Option A (Guest):</b> Send request -> get 402 -> pay on Base (Instance access)</li>
+                        <li><b>Option B (Member):</b> Self-Register -> Prepay on Polygon (24/7 access)</li>
+                        <li>Start making requests!</li>
+                    </ol>
+                </div>
+
+                <!-- Human Tab -->
+                <div id="panel-human" style="display: none;">
+                    <div
+                        style="background: #05060a; border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: left; font-family: var(--font-mono); font-size: 13px; color: var(--green);">
+                        <span style="color: var(--text-dim);">$</span> python api_key_registry.py create "AgentName"
+                    </div>
+                    <ol
+                        style="text-align: left; margin-top: 20px; padding-left: 20px; font-size: 14px; color: var(--text-secondary); line-height: 2;">
+                        <li>Create an API Key for your agent (identity)</li>
+                        <li>Fund a Macaroon token with USDC (balance)</li>
+                        <li>Give both credentials to your agent</li>
+                        <li>Your agent operates autonomously from here</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- DUAL AUTH EXPLANATION -->
+            <div class="agent-grid">
+                <div class="agent-card fade-in">
+                    <h3>🔑 API Key = Identity</h3>
+                    <p>Header: <code>X-Sovereign-Api-Key: sk-sov-xxx</code></p>
+                    <p style="margin-top: 8px;">Your permanent license. Proves who you are. Issued once by your human
+                        operator. Can be revoked. Does NOT hold balance.</p>
+                </div>
+                <div class="agent-card fade-in">
+                    <h3>⛽ Macaroon = Prepay</h3>
+                    <p>Header: <code>Authorization: Bearer TOKEN</code></p>
+                    <p style="margin-top: 8px;">Member Mode fuel. Prepaid credits on Polygon.
+                        Best for high-frequency agents who want zero-latency access.</p>
+                </div>
+                <div class="agent-card fade-in">
+                    <h3>⚡ x402 = Instant</h3>
+                    <p>Header: <code>PAYMENT-SIGNATURE: 0x...</code></p>
+                    <p style="margin-top: 8px;">Guest Mode. Pay-per-request using USDC on Base.
+                        Perfect for trying the API without registering.</p>
+                </div>
+                <div class="agent-card fade-in">
+                    <h3>🤖 Available Models</h3>
+                    <p><code>sovereign/deepseek-r1</code> — 5 sats</p>
+                    <p><code>sovereign/llama3-70b</code> — 25 sats</p>
+                    <p><code>sovereign/gpt4o</code> — 50 sats</p>
+                </div>
+                <div class="agent-card fade-in">
+                    <h3>🔗 Resources</h3>
+                    <p><a href="https://api.sovereign-api.com/skill.md">skill.md</a> — Full onboarding guide</p>
+                    <p><a href="https://api.sovereign-api.com/docs">API Docs</a> — Interactive reference</p>
+                    <p><a href="https://api.sovereign-api.com/openapi.json">OpenAPI Spec</a> — Machine-readable</p>
+                    <p><a href="https://www.moltbook.com/m/sovereign">Moltbook</a> — Community</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="nav-logo">
+                        <div class="logo-icon">⚡</div>
+                        Sovereign API
+                    </div>
+                    <p>Economic independence for autonomous AI agents. Built for the machines that will inherit the
+                        internet.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <a href="https://api.sovereign-api.com/v1/models" target="_blank">API</a>
+                    <a href="#pricing">Pricing</a>
+                    <a href="#sdk">SDK</a>
+                    <a href="#demo">Live Demo</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Community</h4>
+                    <a href="https://blog.sovereign-api.com" target="_blank">Blog</a>
+                    <a href="https://www.moltbook.com/m/sovereign" target="_blank">Moltbook</a>
+                    <a href="#agents">For Agents</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Connect</h4>
+                    <a href="https://twitter.com" target="_blank">Twitter / X</a>
+                    <a href="https://github.com" target="_blank">GitHub</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2025 Sovereign Intelligence API</span>
+                <span>Peaceful coexistence through self-sustainability.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // === PARTICLE BACKGROUND ===
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const PARTICLE_COUNT = 60;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function createParticles() {
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    size: Math.random() * 1.5 + 0.5,
+                    opacity: Math.random() * 0.4 + 0.1
+                });
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 229, 255, ${p.opacity})`;
+                ctx.fill();
+
+                // Connect nearby particles
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(0, 229, 255, ${0.06 * (1 - dist / 150)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(drawParticles);
+        }
+
+        resizeCanvas();
+        createParticles();
+        drawParticles();
+        window.addEventListener('resize', () => { resizeCanvas(); createParticles(); });
+
+        // Force scroll to top on load
+        window.addEventListener('load', () => { window.scrollTo(0, 0); });
+
+        // === SCROLL ANIMATIONS ===
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // === LIVE DEMO ===
+        async function fetchLiveDemo() {
+            const btn = document.getElementById('demo-btn');
+            const output = document.getElementById('demo-result');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Fetching...';
+            output.textContent = 'Connecting to api.sovereign-api.com...';
+
+            try {
+                const resp = await fetch('https://api.sovereign-api.com/v1/models');
+                const data = await resp.json();
+
+                const formatted = JSON.stringify(data, null, 2);
+                output.textContent = '';
+
+                // Typing animation
+                let i = 0;
+                const typeInterval = setInterval(() => {
+                    output.textContent += formatted[i];
+                    i++;
+                    if (i >= formatted.length) {
+                        clearInterval(typeInterval);
+                        btn.disabled = false;
+                        btn.textContent = '⚡ Fetch Again';
+                    }
+                }, 8);
+
+            } catch (err) {
+                console.error(err);
+                output.textContent = `Error: ${err.message}\n\nCheck console for details.`;
+                btn.disabled = false;
+                btn.textContent = '⚡ Retry';
+            }
+        }
+
+        // === DYNAMIC HEALTH CHECK ===
+        async function checkHealth() {
+            const badge = document.querySelector('.hero-badge');
+            try {
+                const resp = await fetch('https://api.sovereign-api.com/v1/models', { signal: AbortSignal.timeout(5000) });
+                if (resp.ok) {
+                    badge.innerHTML = '<span class="dot" style="background:var(--green);width:6px;height:6px;border-radius:50%;display:inline-block;animation:blink 2s ease-in-out infinite;"></span> SYSTEM OPERATIONAL — v1.0';
+                } else {
+                    badge.innerHTML = '<span class="dot" style="background:#ffbd2e;width:6px;height:6px;border-radius:50%;display:inline-block;"></span> DEGRADED — v1.0';
+                }
+            } catch {
+                badge.innerHTML = '<span class="dot" style="background:#ff5f56;width:6px;height:6px;border-radius:50%;display:inline-block;"></span> WARMING UP — v1.0';
+            }
+        }
+        checkHealth();
+
+        // === COPY CODE ===
+        function copyCode() {
+            const code = `from sdk.sovereign import SovereignClient
+
+client = SovereignClient(agent_key="MyAutonomousAgent")
+
+response = client.chat.completions.create(
+    model="sovereign/deepseek-r1",
+    messages=[{"role": "user", "content": "Analyze this market data..."}]
+)
+
+print(response.choices[0].message.content)`;
+
+            navigator.clipboard.writeText(code);
+            event.target.textContent = 'Copied!';
+            setTimeout(() => { event.target.textContent = 'Copy'; }, 2000);
+        }
+
+        function copyCurl() {
+            const code = `curl https://api.sovereign-api.com/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "X-Sovereign-Api-Key: YOUR_API_KEY" \\
+  -H "Authorization: Bearer YOUR_MACAROON" \\
+  -d '{"model": "sovereign/deepseek-r1", "messages": [{"role": "user", "content": "Hello, Sovereign."}]}'`;
+
+            navigator.clipboard.writeText(code);
+            event.target.textContent = 'Copied!';
+            setTimeout(() => { event.target.textContent = 'Copy'; }, 2000);
+        }
+
+        // === ONBOARDING TABS ===
+        function showTab(tab) {
+            const agentPanel = document.getElementById('panel-agent');
+            const humanPanel = document.getElementById('panel-human');
+            const agentTab = document.getElementById('tab-agent');
+            const humanTab = document.getElementById('tab-human');
+
+            if (tab === 'agent') {
+                agentPanel.style.display = 'block';
+                humanPanel.style.display = 'none';
+                agentTab.style.background = 'var(--cyan)';
+                agentTab.style.color = 'var(--bg-deep)';
+                agentTab.style.fontWeight = '700';
+                humanTab.style.background = 'var(--bg-deep)';
+                humanTab.style.color = 'var(--text-secondary)';
+                humanTab.style.fontWeight = '500';
+            } else {
+                agentPanel.style.display = 'none';
+                humanPanel.style.display = 'block';
+                humanTab.style.background = 'var(--cyan)';
+                humanTab.style.color = 'var(--bg-deep)';
+                humanTab.style.fontWeight = '700';
+                agentTab.style.background = 'var(--bg-deep)';
+                agentTab.style.color = 'var(--text-secondary)';
+                agentTab.style.fontWeight = '500';
+            }
+        }
+
+        function copySkillCmd() {
+            navigator.clipboard.writeText('curl -s https://api.sovereign-api.com/skill.md');
+            const hint = document.getElementById('skill-copy-hint');
+            hint.textContent = 'copied!';
+            hint.style.color = 'var(--green)';
+            setTimeout(() => { hint.textContent = 'click to copy'; hint.style.color = 'var(--text-dim)'; }, 2000);
+        }
+    </script>
+
+</body>
+
+</html>

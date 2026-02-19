@@ -1,0 +1,10 @@
+# Agent Creation Demo Plan
+
+## Goal Description
+Demonstrate dynamic agent creation by building a "Haiku Poet" agent.
+
+## Implementation
+- `[NEW] .agent/skills/haiku-poet/SKILL.md`: The persona definition.
+
+## Verification
+- I will simulate an interaction where I "switch" to this agent.

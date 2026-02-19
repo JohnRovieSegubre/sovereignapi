@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+httpx
+pymacaroons
+requests
+web3
+python-dotenv
+eth-account>=0.11.2
+markdown

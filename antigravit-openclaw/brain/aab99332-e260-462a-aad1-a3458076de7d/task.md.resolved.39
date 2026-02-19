@@ -1,0 +1,11 @@
+# Tasks
+
+- [x] Integrate `sickn33/antigravity-awesome-skills` <!-- id: 8 -->
+- [x] Optimize Orchestrator for 200+ Skills <!-- id: 15 -->
+- [x] Create 'Comic Animator' Super Kit <!-- id: 20 -->
+- [x] Deploy Kit to Scratch Directory <!-- id: 26 -->
+- [x] Integrate GitHub <!-- id: 31 -->
+- [x] Verify Comic Prompt Execution Flow <!-- id: 36 -->
+- [x] Research NotebookLM Integration <!-- id: 45 -->
+    - [x] Check `general-notebooklm` skill capabilities <!-- id: 46 -->
+    - [x] Confirm connectivity method (Visible Browser Auth) <!-- id: 47 -->

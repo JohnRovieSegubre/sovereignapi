@@ -1,0 +1,36 @@
+# Walkthrough - Comic Animation System Fixes
+
+We have successfully resolved the MediaPipe import issues and environmental conflicts. The system is now robust and designed for the unique challenges of manga/comic art.
+
+## Key Accomplishments
+
+### 1. Robust Dependency Management
+- **Python 11 Environment**: Resolved MediaPipe crashes by moving from Python 3.13 (unsupported) to a clean Python 3.11 virtual environment.
+- **Modern API Migration**: Switched from the legacy `mediapipe.solutions` to the modern **MediaPipe Tasks API**, which is the current industry standard.
+
+### 2. Specialized Manga Detection (Sustainability)
+- **Face Mode**: We prioritized the 478-point **Face Landmarker** over the full-body tracker. This is much more "sustainable" for comic panels which frequently use close-up or mid-shot compositions.
+- **Manual Overrides**: Added a "User-in-the-loop" feature where a `landmarks_override.json` file can be used to bypass AI detection entirely for extremely abstract art styles.
+
+## Verification Results
+
+### Landmark Detection (The Main Hurdle)
+We verified the new Face Mode on the user's secret manga drawings using a custom utility script. 
+
+**Result**:
+- **Start Image**: 478 landmarks detected (100% success)
+- **End Image**: 478 landmarks detected (100% success)
+
+![Face Detection Verification](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/debug_start.png)
+*Visual confirmation of detected facial mesh.*
+
+### End-to-End Pipeline
+The full pipeline (SAM + Warping + Rendering) is currently running to completion. 
+
+> [!NOTE]
+> SAM (vit_h) on CPU takes approx. 30-40 minutes per image. For faster testing, we recommend switching to `vit_b` in [src/config.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/config.py).
+
+## Next Steps
+- [ ] Review the `manga_face_test.mp4` output once the CPU finishes rendering.
+- [ ] Use [scripts/verify_landmarks.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/scripts/verify_landmarks.py) for all future asset testing to save time.
+- [ ] Implement a simple UI for the manual joint-click override.

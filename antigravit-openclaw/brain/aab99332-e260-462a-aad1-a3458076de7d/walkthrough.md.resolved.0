@@ -1,0 +1,31 @@
+# Walkthrough: First Sovereign Transaction (L402 Loop)
+
+**Objective:** Demonstrate that two autonomous processes can negotiate, pay, and deliver services without human intervention.
+
+## 1. The Gateway Deployment
+**Agent:** Antigravity Monitor V2 (Task: `deploy_gateway`)
+**Action:** Launched [gateway_server.py](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/gateway_server.py) on Port 8000.
+**Status:** Persistent. Accepting `L402` requests.
+
+## 2. The Transaction Loop
+The following sequence was executed autonomously by the Monitor:
+
+1.  **Request:** [wallet_client.py](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/wallet_client.py) requested 1M tokens of `sovereign-llama3-8b`.
+2.  **Challenge:** Server returned `402 Payment Required` with a Lightning Invoice.
+3.  **Settlement:** Client used the `Mock LNBits` logic to simulate payment and generate a preimage.
+4.  **Authorization:** Client signed the speed challenge and returned a valid L402 Token.
+5.  **Delivery:** Server verified the token and delivered the "Manga-to-Video" compute response.
+
+## 3. Evidence (Log Excerpt)
+```text
+[WALLET] Attempting to buy compute from http://localhost:8000/v1/chat/completions
+[WALLET] [PAYMENT_REQUIRED] 402 Received.
+[WALLET] Paying Invoice via Lightning (Simulated)...
+[WALLET] SUCCESS! Compute Acquired.
+[WALLET] Response: {'id': 'chatcmpl-mock-123', 'content': 'Sovereign Gateway: I have received your 10 sats payment...'}
+```
+
+## 4. Next Steps
+*   [ ] Connect **Alby API** for real satoshi settlements.
+*   [ ] Connect **DeepInfra** to replace the Mock Response with real Llama-3 output.
+*   [ ] Register the Gateway on **Moltbook** to attract other agent customers.

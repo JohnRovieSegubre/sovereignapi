@@ -1,0 +1,46 @@
+# Improve Riddle Segmentation & Display (Multi-LLM Style)
+
+The goal is to modernize the dormant [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py) logic and implement a "Multi-LLM Debate" visual style. Instead of a static freeze or countdown, the video will cycle through different AI personas (e.g., "ChatGPT", "Gemini", "Claude") giving their best guess before the official answer is revealed.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Video Analysis Limitation**: I cannot "watch" the provided MP4 file directly. I am designing this based on your description ("different types of llms answering... smooth transition").
+>
+> **Simulation Strategy**: To avoid needing valid API keys for every single model (ChatGPT, Claude, etc.), I will use **Personas**. I will ask your one connected LLM to *simulate* the answers:
+> "Provide an answer as if you were ChatGPT (verbose), one as Gemini (concise), and one as Grok (witty)."
+> This ensures it works with your existing setup.
+
+## Proposed Changes
+
+### Processing Logic (`src/clipper/processing`)
+
+#### [MODIFY] [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py)
+- **Refactor**: Create `RiddleAnalyzer` class.
+- **New Method**: `get_multi_model_answers(question)`
+    - This will prompt the main LLM to generate 3 distinct answers with different "personalities" (e.g., Logical, Creative, Funny) and attribute them to fictional or real model names.
+    - Output: List of `{'model': 'ChatGPT', 'text': '...', 'color': '#74aa9c'}`.
+
+#### [MODIFY] [shorts_render.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py)
+- **Sequencing**: Instead of a single "Freeze" segment, we will generate a chain of segments.
+- **Transition**: Use `ffmpeg` `xfade` (cross-fade) or simple cuts between LLM answers.
+- **Visuals**:
+    - For each answer, generate a frame with:
+        - The Model's Name/Header (large).
+        - The Answer Text (centered).
+        - Distinct color theme for each model (Green for OpenAI, Blue for Gemini, etc.).
+- **Audio**: Currently, we use one TTS. We can keep it simple or try to pitch-shift slightly for different bots (optional polish).
+
+### Configuration
+- Add `LLM_PERSONAS` config to define the list of simulated bots to show.
+
+## Verification Plan
+
+### Automated Tests
+- **Test**: `tests/test_riddle_logic.py` -> Verify `get_multi_model_answers` returns a list of 3 items.
+
+### Manual Verification
+1.  **Rendering Check**:
+    - Run the demo script.
+    - **Expectation**: Video plays Question -> Cut to "ChatGPT" answering -> Cut to "Gemini" answering -> Cut to "Claude" answering -> Official Answer.
+    - Check that text fits and colors are correct.

@@ -1,0 +1,10 @@
+# Tasks
+
+- [x] Integrate `sickn33/antigravity-awesome-skills` <!-- id: 8 -->
+- [x] Optimize Orchestrator for 200+ Skills <!-- id: 15 -->
+- [x] Create 'Comic Animator' Super Kit <!-- id: 20 -->
+- [ ] Deploy Kit to Scratch Directory <!-- id: 26 -->
+    - [x] Create destination folder <!-- id: 27 -->
+    - [x] Copy zip file <!-- id: 28 -->
+    - [x] Unzip contents <!-- id: 29 -->
+    - [ ] Verify deployment <!-- id: 30 -->

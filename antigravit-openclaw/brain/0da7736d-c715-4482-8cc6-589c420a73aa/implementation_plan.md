@@ -1,0 +1,49 @@
+# Implementation Plan - Manga Animation System (Generative Pivot)
+
+## Goal Description
+Build a **"Generative Director"** system that orchestrates State-of-the-Art Video APIs (Runway Gen-3 Alpha, Kling AI) to animate manga panels.
+- **Core Pivot**: Move from local Computer Vision (Pose/Mesh) to API Orchestration.
+- **Why**: Higher fidelity, solves occlusion/turning heads, "dream-like" manga motion quality.
+- **Role**: Software acts as the "Director" ensuring consistency (Start/End frames) and quality (SSIM checks).
+
+## Architecture: The "Cloud Director" Pattern
+
+### `src/pipeline/model_adapter.py` (New Core)
+- **`ModelAdapter` Interface**:
+    - `submit_job(start_img, end_img, prompt)` -> `job_id`
+    - `poll_status(job_id)` -> `status`, `video_url`
+- **Adapters**:
+    - `RunwayAdapter`: Gen-3 Alpha (Image-to-Video with Keyframes).
+    - `KlingAdapter`: (Future) High-fidelity manga model.
+    - `MockAdapter`: For local dev (returns cached video instantly).
+
+### `worker.py` (Refactored)
+- **Old Role**: Image Processor (SAM -> Pose -> Warp).
+- **New Role**: **Job Orchestrator**.
+    1. **Pre-Flight**: resize/format images for API specs (e.g., 768p, 16:9 padding).
+    2. **Prompt Engineering**: Auto-generate motion prompts based on filename or simple UI inputs (e.g., "slow zoom", "windy hair").
+    3. **Dispatch**: Call `ModelAdapter`.
+    4. **Post-Process QA**:
+        - Download result.
+        - **SSIM Check**: Compare first frame of video vs original Start Panel.
+        - **Reject/Retry**: If API ignored the input image (hallucination), flag failure.
+
+## User Interface Updates (Next.js)
+- **New Inputs**:
+    - **Motion Prompt**: Text area for "hair blowing in wind", "tears falling".
+    - **Style Preset**: "Cinematic", "Anime", "Rough Sketch".
+- **Status Polling**: UI must handle long-running jobs (Generative takes ~60-120s vs local instant).
+
+## Phase 8: Generative Integration (Active)
+- [ ] **API Keys**: Setup mechanism for secure env var usage.
+- [ ] **Adapter Logic**: Implement `RunwayAdapter` with robust error handling (rate limits).
+- [ ] **Worker Transition**: Strip Pose/Mesh imports, wire up Adapter.
+
+## Feature Compatibility
+| Feature | Old Pipeline (Local) | New Pipeline (Generative) |
+| :--- | :--- | :--- |
+| **Motion Quality** | Mechanical (Puppet) | **Fluid / Cinematic** |
+| **Head Turns** | Impossible / Glitchy | **Native Support** |
+| **Cost** | Free (Local GPU) | **Per-second ($)** |
+| **Latency** | Instant (~200ms) | **Slow (~60s)** |
+| **Safety** | Rigid (No hallucinations) | **Generative (Needs QA)** |

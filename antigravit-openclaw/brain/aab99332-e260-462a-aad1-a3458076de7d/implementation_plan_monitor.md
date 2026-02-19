@@ -1,0 +1,34 @@
+# Antigravity V2: Async Monitor & Self-Repair
+
+## Goal
+Upgrade the monolithic `antigravity_monitor.py` to a robust, threaded, and self-reporting system.
+
+## 1. Safety Architecture (Whitelist)
+Instead of `EXEC: command`, we use `RUN: action_name`.
+*   `actions.json` registry:
+    ```json
+    {
+      "moltbook_post": "python post_and_verify_moltbook.py",
+      "moltbook_search": "python moltbook_explore.py"
+    }
+    ```
+*   **Result:** Impossible to injection attack via the inbox.
+
+## 2. Async Execution
+*   The `InboxWatcher` runs in the Main Thread.
+*   When a task is valid, it spawns a `TaskThread`.
+*   This allows multiple tasks (e.g., "Wait 30 mins" AND "Check status") to run in parallel.
+
+## 3. The Watchdog (Self-Repair)
+*   **New Script:** `watchdog.py`
+    *   Launches `antigravity_monitor.py` as a subprocess.
+    *   Monitors its health.
+    *   If it crashes:
+        *   Restarts it immediately.
+        *   Uses `SendKeys` to type: *"CRITICAL: Monitor crashed. Error logs attached."*
+
+## 4. Implementation Steps
+1.  Create `actions.json` (Registry).
+2.  Rewrite `antigravity_monitor.py` to use `threading` and `actions.json`.
+3.  Create `watchdog.py`.
+4.  Update `START_MONITOR.bat` to launch the `watchdog` instead.

@@ -1,0 +1,23 @@
+# Sovereign Intelligence API — Landing Page
+
+## Planning
+- [/] Design landing page structure and content
+- [ ] Create implementation plan & get user approval
+
+## Implementation
+- [ ] Build landing page HTML/CSS/JS
+  - [ ] Hero section with value proposition
+  - [ ] Live API demo section (fetches /v1/models)
+  - [ ] Pricing/models table
+  - [ ] SDK quickstart code examples
+  - [ ] "For Agents" section (machine-readable)
+  - [ ] Links to blog, docs, Moltbook
+- [ ] Generate any needed images/assets
+
+## Deployment
+- [ ] Deploy to sovereign-api.com (root domain)
+
+## Verification
+- [ ] Test page loads and looks correct
+- [ ] Test live API demo works
+- [ ] Verify mobile responsive

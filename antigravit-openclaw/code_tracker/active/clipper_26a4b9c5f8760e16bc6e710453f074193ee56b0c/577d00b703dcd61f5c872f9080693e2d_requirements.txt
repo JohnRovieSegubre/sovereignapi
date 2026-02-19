@@ -1,0 +1,32 @@
+Å# Core project dependencies (add more as needed)
+# e.g. requests==2.31.0
+
+# Optional ML/runtime backends
+transformers>=4.30.0
+huggingface-hub>=0.16.4
+open_clip_torch>=2.20.0  # Vision support
+pillow>=10.0.0
+torch>=2.0.0             # CPU version by default is fine
+torchvision>=0.15.0
+
+ollama>=0.1.6  # optional: local Ollama client
+gpt4all>=0.10.0  # optional: GPT4All bindings
+# bitsandbytes (Windows: platform-specific; install manually if using GPU)
+# bitsandbytes
+
+# YouTube + download
+google-api-python-client>=2.100.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+yt-dlp>=2024.1.1
+
+# Transcription
+openai-whisper>=20231117
+faster-whisper>=0.10.0
+
+# TTS (offline on Windows via SAPI5)
+pyttsx3>=2.99
+
+# Testing
+pytest>=7.0
+ò *cascade08ò∞*cascade08∞Å *cascade08"(26a4b9c5f8760e16bc6e710453f074193ee56b0c29file:///c:/Users/rovie%20segubre/clipper/requirements.txt:(file:///c:/Users/rovie%20segubre/clipper

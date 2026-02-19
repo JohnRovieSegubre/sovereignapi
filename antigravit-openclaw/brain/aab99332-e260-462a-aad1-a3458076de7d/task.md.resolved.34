@@ -1,0 +1,11 @@
+# Tasks
+
+- [x] Integrate `sickn33/antigravity-awesome-skills` <!-- id: 8 -->
+- [x] Optimize Orchestrator for 200+ Skills <!-- id: 15 -->
+- [x] Create 'Comic Animator' Super Kit <!-- id: 20 -->
+- [x] Deploy Kit to Scratch Directory <!-- id: 26 -->
+- [x] Integrate GitHub <!-- id: 31 -->
+    - [x] Check Git Config & Auth Status <!-- id: 32 -->
+    - [x] Configure Git User (Configured: JohnRovieSegubre) <!-- id: 33 -->
+    - [x] Authenticate GitHub CLI (Authenticated: JohnRovieSegubre) <!-- id: 34 -->
+    - [x] Verify Private Repo Access (Scoped: repo) <!-- id: 35 -->

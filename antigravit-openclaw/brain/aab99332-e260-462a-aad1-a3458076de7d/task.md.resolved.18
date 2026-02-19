@@ -1,0 +1,10 @@
+# Tasks
+
+- [x] Install Antigravity Kit `vudovn/antigravity-kit` <!-- id: 0 -->
+- [x] Configure Orchestrator Agent <!-- id: 1 -->
+- [x] Demonstrate Agent Creation <!-- id: 2 -->
+- [x] Prepare Migration to New Workspace <!-- id: 3 -->
+- [ ] Integrate `sickn33/antigravity-awesome-skills` <!-- id: 8 -->
+    - [ ] Clone and Security Audit <!-- id: 9 -->
+    - [ ] Report Capabilities & Safety <!-- id: 10 -->
+    - [ ] Install Safe Skills <!-- id: 11 -->

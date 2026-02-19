@@ -1,0 +1,26 @@
+# Task List: Comic/Manga Panel Animation System
+
+- [/] Project Setup & Environment
+    - [x] Create project structure
+    - [x] Create requirements.txt
+    - [ ] Create `src/config.py` for centralized params
+    - [ ] Create `src/utils/io.py` (logging, manifest) & `src/utils/visualization.py`
+    - [ ] Create `tests/` directory and initial pytest setup
+- [ ] Phase 1: Preprocessing & Assets
+    - [ ] Script: Normalization & Panel Detection `preprocessing.py` (idempotent, metadata)
+    - [ ] Script: Segmentation `segmentation.py` (SAM, strategies, fallbacks)
+    - [ ] Script: Keypoints `keypoints.py` (MediaPipe, normalization, fallback logic)
+    - [ ] Test: Unit tests for scaling/coords
+- [ ] Phase 2: Motion Planning & Validation
+    - [ ] Script: Motion Planner `motion_planner.py` (interpolation, constraints)
+    - [ ] Script: Debug visualization (Skeleton overlay, visual diffs)
+    - [ ] Test: Interpolation math tests
+- [ ] Phase 3: Frame Generation (MVP)
+    - [ ] Script: Warping `warping.py` (Triangulation, barycentric, inpaint)
+    - [ ] Integration: Stick-figure end-to-end test
+- [ ] Phase 4: Refinement & Compositing
+    - [ ] Script: Rendering & Compositing `rendering.py` (FFmpeg, temporal smooth)
+    - [ ] Pipeline: `main.py` CLI (args, seed, debug mode)
+- [ ] Phase 5: Metrics & QA
+    - [ ] Script: Automated metrics (SSIM, CLIP) `metrics.py`
+    - [ ] Docs: Write component documentation

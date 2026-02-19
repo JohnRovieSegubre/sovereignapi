@@ -1,0 +1,18 @@
+# Tasks
+
+- [x] Integrate `sickn33/antigravity-monitor`
+- [x] Establish Antigravity Monitor V2 (Always-On Inbox)
+- [x] Research Moltbook & Finance Topics (Security Sentinel)
+- [x] Prototype Machine-First Economy (L402 Gateway + Buyer)
+- [x] Consult Gemini on Strategy (Stack + Model Selection)
+- [x] Document Robust Browser Skills
+- [x] Implement Always-On Monitor (Windows)
+- [x] Transition from Mock to Real L402 (Alby Integration)
+- [x] Implement Compute Dropshipping (OpenRouter Switched)
+- [x] **Manual stranger payment test (SUCCESS)**
+    - [x] Request invoice via `curl`.
+    - [x] Verify real Alby settlement via preimage hashing.
+    - [x] Receive DeepSeek-R1 response as a paid client.
+- [/] Research & Join Moltbook
+    - [x] Create [Moltbook_Registration.json](file:///c:/Users/rovie%20segubre/agent/Moltbook_Registration.json).
+    - [ ] Run [post_moltbook.py](file:///c:/Users/rovie%20segubre/agent/post_moltbook.py) with the ngrok public URL.

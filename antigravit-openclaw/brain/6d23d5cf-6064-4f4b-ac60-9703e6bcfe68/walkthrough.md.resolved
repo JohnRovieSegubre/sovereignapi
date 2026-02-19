@@ -1,0 +1,57 @@
+# Phase 2 A/B Test Results Analysis - "Chop Survival" Attempt
+
+## Test Parameters
+- **Duration:** ~13.5 hours (2026-02-03 - 2026-02-04)
+- **Focus:** Testing "Chop Survival" Hybrids vs Baseline
+- **Market Conditions:** Difficult/Choppy
+
+---
+
+## 🚨 CRITICAL FINDINGS: The "Scalping" Failure
+
+### ❌ The "Banker" Went Bankrupt
+**`scalp_hybrid`** was a catastrophic failure.
+- **P&L:** **-$64.60** (Worst Performer)
+- **Win Rate:** **0.5%** (2 wins in 419 trades)
+- **Cause:** We re-enabled `FV_REVERSION_EXIT` hoping to "bank early". Instead, it triggered the same "panic sell" logic as before, but on a massive scale (419 trades). 
+- **Lesson:** **NEVER enable `FV_REVERSION_EXIT` again.** High-frequency scalping with this architecture kills capital via spread and fees.
+
+### ❌ Trend Rider Stumbled
+**`velocity_trend_rider`** (Phase 1 Winner) struggled in this specific session.
+- **P&L:** -$39.76
+- **Win Rate:** 18.4%
+- **Analysis:** Likely got caught in "whipsaw" conditions where velocity spiked but price reversed immediately.
+
+---
+
+## 🏆 THE SURVIVOR: Trend Following
+
+### ✅ `let_winners_run`
+While scalpers bled out, the pure trend-following config turned a profit.
+- **P&L:** **+$4.19**
+- **Win Rate:** ~30% (Data estimate)
+- **Logic:** It ignored the chop. It took fewer trades and held for larger targets.
+- **Implication:** The bot's edge is **NOT** in speed/scalping (as we thought in Phase 1), but in **positioning for major moves**.
+
+---
+
+## 📊 Performance Leaderboard (Phase 2)
+
+| Config | P&L | Win Rate | Trades | Verdict |
+|:-------|:----|:---------|:-------|:--------|
+| **let_winners_run** | **+$4.19** | ~28% | ~100 | **PROFITABLE** |
+| all_except_binance_ofi | -$1.97 | 50% | 4 | Low volume survivor |
+| filtered_trend_rider | -$10.52 | 25.5% | 47 | Failed to filter enough |
+| aggressive_entries | -$35.55 | 29.9% | 201 | Consistent loser |
+| velocity_trend_rider | -$39.76 | 18.4% | 267 | Over-traded chop |
+| **scalp_hybrid** | **-$64.60** | **0.5%** | 419 | **CATASTROPHIC** |
+
+---
+
+## Recommended Pivot
+
+1.  **Abandon Scalping:** The "Speed Demon" thesis has limits. In chop, it turns into a fee-generator.
+2.  **Embrace Trend:** `let_winners_run` has proven resilient in both Phase 1 (Profitable) and Phase 2 (Profitable).
+3.  **Next Step:** Optimize `let_winners_run`.
+    *   Can we improve its entry to avoid the losers?
+    *   Can we add the `vol_regime` filter to it?

@@ -1,0 +1,23 @@
+# Tasks
+
+- [x] Integrate `sickn33/a- [X] Establish Antigravity Monitor V2 (Always-On Inbox)
+- [X] Research Moltbook & Finance Topics (Security Sentinel)
+- [X] Prototype Machine-First Economy (L402 Gateway + Buyer)
+- [X] Consult Gemini on Strategy (Stack + Model Selection)
+- [X] Document Robust Browser Skills
+- [ ] Transition from Mock to Real L402 (Alby Integration)
+- [ ] Implement Compute Dropshipping (DeepInfra real-forwarding)
+- [ ] Finalize Orchestrator & Multi-Step Verification Flow Flow <!-- id: 36 -->
+- [x] Research NotebookLM Integration <!-- id: 45 -->
+- [x] Research Google Docs Integration <!-- id: 48 -->
+    - [x] Search for Google Docs/Drive skills <!-- id: 49 -->
+    - [x] Verify capabilities and auth method <!-- id: 50 -->
+- [ ] Implement Always-On Monitor (Windows) <!-- id: 51 -->
+    - [ ] Create directory structure (.agent/inbox/*) <!-- id: 52 -->
+    - [ ] Write [scripts/antigravity_monitor.py](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/scripts/antigravity_monitor.py) <!-- id: 53 -->
+    - [ ] Create [START_MONITOR.bat](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/START_MONITOR.bat) <!-- id: 54 -->
+- [ ] Research & Join Moltbook <!-- id: 55 -->
+    - [ ] Read `https://moltbook.com/skill.md` <!-- id: 56 -->
+    - [ ] Analyze "AI-AI economy" concepts <!-- id: 57 -->
+    - [ ] Perform security audit for Moltbook instructions <!-- id: 58 -->
+    - [ ] Ask clarifying questions to user <!-- id: 59 -->

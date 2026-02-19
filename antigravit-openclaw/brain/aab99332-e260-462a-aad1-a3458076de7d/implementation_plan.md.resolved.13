@@ -1,0 +1,22 @@
+# Orchestrator Upgrade Plan: Hierarchical Dispatch
+
+## Goal Description
+The Orchestrator cannot efficiently hold 232+ skills in its context. We must move to a **Hierarchical Model**. The Orchestrator will act as a "Manager of Managers," delegating to Domain Specialists who hold the specific skills.
+
+## Proposed Changes
+
+### 1. Create Domain Specialists
+I will create new Agent definitions in `.agent/agents/` that correspond to our new categories:
+- `security-lead.md`: Has access to all `sec-*` skills.
+- `growth-lead.md`: Has access to all `growth-*` skills.
+- `integration-lead.md`: Has access to all `api-*` skills.
+- `autonomous-lead.md`: Has access to all `auto-*` skills.
+
+### 2. Update Orchestrator (`orchestrator.md`)
+- **Remove** direct access to low-level skills (e.g., remove `sec-redteam-metasploit` from its list).
+- **Add** access to the new Specialist Agents.
+- **Update Instructions**: Explicitly tell it to delegate. "If the user asks for a pentest, call `security-lead`, do not try to do it yourself."
+
+## Verification
+- Verify the Orchestrator sees the new Specialists.
+- Simulate a request: "Market my app" -> Orchestrator delegates to `growth-lead`.

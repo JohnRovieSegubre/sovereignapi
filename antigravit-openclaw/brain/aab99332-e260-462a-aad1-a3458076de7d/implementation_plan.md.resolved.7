@@ -1,0 +1,17 @@
+# Orchestrator Setup Plan
+
+## Goal Description
+The user wants an **Orchestrator Agent** that leverages the installed kit. The kit typically includes an [orchestrator.md](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/.agent/agents/orchestrator.md) agent definition. I will verify this and then create a **Workflow** that makes it easy to invoke this orchestrator for complex missions.
+
+## Concepts
+- **Orchestrator Agent**: High-level planner.
+- **Worker Agents**: Specialists (Frontend, Backend, etc.) from the kit.
+- **Workflow**: The entry point for the user.
+
+## Proposed Changes
+1.  **Verify**: Check [.agent/agents/orchestrator.md](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/.agent/agents/orchestrator.md).
+2.  **Create Workflow**: `[NEW] .agent/workflows/super_orchestrator.md`
+    - This workflow will define how to take a user prompt, pass it to the orchestrator, and have the orchestrator delegate to other agents.
+
+## Verification
+- Run the workflow with a complex request (e.g., "Design a blog").

@@ -1,0 +1,75 @@
+# Optimized A/B Test Configuration Changes
+
+## Goal
+Implement configuration changes based on NotebookLM analysis to test the "Velocity Trend Rider" strategy and fix known problematic configs.
+
+## Key Findings from Analysis
+- **Best performers:** `let_winners_run` (+$2.91), `wider_stops` (79% WR)
+- **Worst performers:** `aggressive_entries` (-$13.82), `hybrid_exits` (5.7% WR)
+- **Root cause:** `FV_REVERSION_EXIT=True` causes premature exits ("death by a thousand cuts")
+- **Sweet spot:** OFI > 1.03 + Velocity > 1.005 + Final vote > 1.05
+
+## Proposed Changes
+
+### 1. Add New Config: `velocity_trend_rider` (NotebookLM's Optimal)
+
+```python
+"velocity_trend_rider": {
+    "description": "Velocity + OFI + Vol Regime (NotebookLM Optimal)",
+    "strategies": {
+        "momentum": False,
+        "price_velocity": True,
+        "binance_ofi": True,
+        "polymarket_ofi": False,
+        "volume_profile": False,
+        "obv_divergence": False,
+        "vol_regime": True,  # Safety filter
+        "vol_percentile": False,
+    },
+    "params": {
+        "BUY_ENTRY_EDGE": 0.008,        # Filter noise (was 0.005)
+        "ENTRY_AMP_THRESHOLD": 1.04,    # Require conviction
+        "MAX_ENTRY_EDGE": 0.025,        # Pay spread for velocity
+        "TAKE_PROFIT_1": 15.0,          # Capture fat tail
+        "TAKE_PROFIT_2": 25.0,
+        "TAKE_PROFIT_3": 35.0,
+        "STOP_LOSS_PCT": -25.0,         # Wide stop
+        "FV_REVERSION_EXIT": False,     # CRITICAL: Disable panic exits
+    }
+}
+```
+
+---
+
+### 2. Fix `hybrid_exits` - Disable FV Reversion
+
+**File:** [strategy_ab_tester.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py) (line 596)
+
+```diff
+- "FV_REVERSION_EXIT": True,
++ "FV_REVERSION_EXIT": False,
+```
+
+**Reason:** This was causing 5.7% win rate due to panic selling on noise.
+
+---
+
+### 3. Fix `scalper_combo` - Increase Entry Edge
+
+**File:** [strategy_ab_tester.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py) (line 499)
+
+```diff
+- "BUY_ENTRY_EDGE": 0.005,
++ "BUY_ENTRY_EDGE": 0.008,
+```
+
+**Reason:** 0.5% edge trades too much noise.
+
+---
+
+## Verification Plan
+
+1. **Clear existing logs** using [reset_logs.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/reset_logs.py)
+2. **Restart A/B test** with [run_ab_test.bat](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/run_ab_test.bat)
+3. **Monitor for 1-2 hours** to collect initial data
+4. **Check NotebookLM** for early patterns on new configs

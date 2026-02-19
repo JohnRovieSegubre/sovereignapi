@@ -1,0 +1,25 @@
+# Agent Creation Plan
+
+## Goal Description
+The user wants to know how to create agents. I will demonstrate how to build a simple, extensible AI agent capable of using tools (ReAct pattern).
+
+## User Review Required
+> [!IMPORTANT]
+> Please confirm your preferred programming language (Python is recommended for AI) and if you have an API key for an LLM provider (OpenAI, Anthropic, Gemini, etc.).
+
+## Proposed Changes
+
+### Project Structure
+I will create a simple project in the current directory:
+- `agent.py`: The main agent logic.
+- `tools.py`: Basic tools for the agent to use (e.g., calculator, search mock).
+- `requirements.txt`: Dependencies.
+
+### Technologies
+- **Language**: Python 3.x
+- **Libraries**: `openai` (or similar SDK), `python-dotenv`
+
+## Verification Plan
+### Manual Verification
+- Run `python agent.py` and interact with the agent via command line.
+- Verify the agent can correctly route queries to tools.

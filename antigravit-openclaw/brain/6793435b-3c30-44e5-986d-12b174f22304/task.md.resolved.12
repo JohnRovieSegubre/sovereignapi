@@ -1,0 +1,48 @@
+# Sovereign Mint: Task List
+
+## Phase 1-5: Core Infrastructure (COMPLETE)
+- [x] Gateway Server with L402 + Macaroon Auth
+- [x] Token Rotation ("Catch the Change")
+- [x] Replay Attack Protection
+- [x] Mailbox Protocol (PENDING_CLAIMS)
+- [x] Polygon Watcher (Chainlink Oracle)
+- [x] Cloud Deployment (Docker, GCloud @ 34.55.175.24)
+
+---
+
+## Phase 6: Sovereign SDK (COMPLETE)
+- [x] SDK Core Library ([sdk/sovereign.py](file:///c:/Users/rovie%20segubre/agent/sdk/sovereign.py))
+- [x] Test Agent ([sdk/agent_customer.py](file:///c:/Users/rovie%20segubre/agent/sdk/agent_customer.py))
+
+---
+
+## Phase 7: Decoupled Identity + Fuel (IN PROGRESS)
+
+### Architecture
+- **API Key (License):** `sk-sov-{random32}` - Persistent identity
+- **Macaroon (Fuel):** Bearer token - Liquid, transferable credits
+
+### Server-Side Tasks
+- [/] **API Key Registry** (`api_key_registry.py`)
+    - [x] JSON storage (`api_keys.json`)
+    - [x] CLI: Generate new keys
+    - [x] CLI: List/Revoke keys
+    - [ ] Validate function for Gateway
+- [ ] **Gateway Upgrade** ([gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py))
+    - [ ] Import registry validator
+    - [ ] Add 401 response for invalid API Key
+    - [ ] Dual-check: API Key + Macaroon
+
+### Client-Side Tasks
+- [ ] **SDK Upgrade** ([sdk/sovereign.py](file:///c:/Users/rovie%20segubre/agent/sdk/sovereign.py))
+    - [ ] Add `api_key` parameter to constructor
+    - [ ] Send `X-Sovereign-Api-Key` header
+    - [ ] Handle 401 vs 402 distinctly
+- [ ] **Autonomous Core** (`autonomous_core.py`)
+    - [ ] Mock Mode support (`MOCK_MODE=1`)
+    - [ ] Fuel level monitoring
+    - [ ] Auto-refuel logic
+    - [ ] 24/7 operation loop
+
+### Deployment
+- [ ] Cloud deployment instructions

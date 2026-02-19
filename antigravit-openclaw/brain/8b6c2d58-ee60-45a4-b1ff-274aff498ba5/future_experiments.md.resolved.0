@@ -1,0 +1,90 @@
+# Future A/B Test Concepts & Combinations
+
+We currently have 26 configurations running. They generally fall into two buckets:
+1.  **Strategy Selection** (Which signals do we listen to?)
+2.  **Parameter Tuning** (How loud does the signal need to be? When do we exit?)
+
+**The Missing Link:** We haven't yet tested **Specific Strategies** paired with **Specific Parameters**.
+
+Here are 3 distinct directions we can explore for the next batch of tests:
+
+---
+
+## 1. The "Strategy-Parameter" Cross-Over 🧬
+*Currently, we only test parameters on the "All Strategies" bundle. We should optimize parameters for specific top-performers.*
+
+### A. The "Scalper" (Velocity + Aggressive)
+*Theory: Price Velocity is a fast signal. It shouldn't wait for a high conviction threshold.*
+*   **Strategies:** [price_velocity](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#2502-2663) + [binance_ofi](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py#724-780) (Fast signals)
+*   **Params:**
+    *   `BUY_ENTRY_EDGE`: **0.005** (Enter early)
+    *   `TAKE_PROFIT_1`: **8.0%** (Take quick wins)
+    *   `STOP_LOSS_PCT`: **-15.0%** (Tight stop)
+
+### B. The "Trend Hunter" (Momentum + Loose Stops)
+*Theory: Momentum needs room to breathe. Tight stops kill it during noise.*
+*   **Strategies:** [momentum](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#1721-1748) + [volume_profile](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#2330-2422)
+*   **Params:**
+    *   `STOP_LOSS_PCT`: **-50%** (Give it room)
+    *   `TAKE_PROFIT_1`: **25%** (Aim for home runs)
+    *   `TRAILING_STOP_DISTANCE`: **10%** (Loose trail)
+
+### C. The "Whale Watcher" (OFI + Sensitivity)
+*Theory: Order flow is precise. We should trust it but require high conviction.*
+*   **Strategies:** [binance_ofi](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py#724-780) + [obv_divergence](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#2713-2832)
+*   **Params:**
+    *   `ENTRY_AMP_THRESHOLD`: **1.10** (Only enter on HUGE imbalance)
+    *   `MAX_ENTRY_EDGE`: **0.02** (Willing to pay more for quality)
+
+---
+
+## 2. Regime-Adaptive Configurations 🌤️
+*Currently, our configs are static. We can create "Specialists" that we manually switch to (or automate later).*
+
+### D. The "Chop Specialist" (Range-Bound)
+*Best for: Low Volatility, Weekends*
+*   **Strategies:** `stochastic` (Mean reversion) + [binance_ofi](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py#724-780) (Micro-moves)
+*   **(New Feature Required):** Enable `stochastic` as a standalone driver?
+*   **Params:**
+    *   `TAKE_PROFIT_ALL`: **10%** (No runners, just base hits)
+    *   `ENTRY_REQUIRE_ACTIVE_AMP`: **True**
+
+### E. The "Breakout Specialist" (High Volatility)
+*Best for: CPI Data, Market Open*
+*   **Strategies:** [price_velocity](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#2502-2663) + [volume_profile](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#2330-2422)
+*   **Params:**
+    *   `ENTRY_AMP_ACTIVE_EPS`: **0.03** (Require strong force)
+    *   `TRAILING_STOP_ACTIVATION`: **5%** (Protect profits immediately)
+
+---
+
+## 3. Advanced Parameter Logic 🧠
+
+### F. Asymmetric Risk Profile
+*Currently: Stop Loss ~30%, Take Profit ~20% (Negative R:R).*
+*Question: Can we force a Positive R:R?*
+*   **Config:** `positive_r_r`
+*   **Params:**
+    *   `STOP_LOSS_PCT`: **-15%**
+    *   `TAKE_PROFIT_1`: **30%**
+    *   *Risk:* Win rate will drop significantly. Can our strategies pick winners well enough to compensate?
+
+### G. "All-in" Execution
+*Currently: We scale out (TP1, TP2, TP3).*
+*Question: Is scaling out costing us money?*
+*   **Config:** `single_exit`
+*   **Params:**
+    *   `TAKE_PROFIT_1`: **20%** (100% size)
+    *   `TAKE_PROFIT_2`: **None**
+    *   `TAKE_PROFIT_3`: **None**
+
+---
+
+## Recommended Next Steps
+
+1.  **Wait for Data:** Let the current 26 run for 24h.
+2.  **Identify the Winner:**
+    *   If `momentum_only` wins -> Build **"Trend Hunter" (B)**.
+    *   If [binance_ofi](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py#724-780) wins -> Build **"Whale Watcher" (C)**.
+    *   If `aggressive_entries` wins -> Apply aggressive params to the best strategy.
+3.  **Refine:** Create a new batch of 5-10 "Hybrid" configs based on the winners.

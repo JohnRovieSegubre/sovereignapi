@@ -1,0 +1,45 @@
+# Sovereign Intelligence API — Landing Page
+
+## Planning
+- [x] Design landing page structure and content
+- [x] Create implementation plan & get user approval
+
+## Implementation
+- [x] Build landing page HTML/CSS/JS
+  - [x] Hero section with value proposition
+  - [x] Live API demo section (fetches /v1/models)
+  - [x] Pricing/models table
+  - [x] SDK quickstart code examples
+  - [x] "For Agents" section (machine-readable)
+  - [x] Links to blog, docs, Moltbook
+- [x] Add root route to gateway_server.py
+- [x] Update deploy_to_cloud.ps1 to include landing folder
+
+## Deployment
+- [x] Deploy to GCP server
+
+## Verification
+- [x] Landing page loads at https://api.sovereign-api.com/
+- [x] All sections render correctly
+- [x] Particle animation works
+
+## Agent Onboarding (Phase 8)
+- [x] Create comprehensive `skill.md` guide <!-- id: 25 -->
+- [x] Implement `/skill.md` route <!-- id: 26 -->
+- [x] Implement autonomous self-registration (`POST /v1/register`) <!-- id: 27 -->
+- [x] Update landing page with self-registration command <!-- id: 28 -->
+- [x] Verify full autonomous onboarding flow <!-- id: 29 -->
+
+## Self-Hosted Blog Engine (Phase 9)
+- [x] Build markdown-to-HTML blog engine in `gateway_server.py`
+- [x] Create dark-themed blog template with JSON-LD structured data
+- [x] Create blog index page at `/blog`
+- [x] Write Article 1: "Agent Payment Bottleneck" (`autonomous-agent-payment.md`)
+- [x] Write Article 2: "Macaroon Tokens for Agents" (`macaroon-tokens-for-agents.md`)
+- [x] Add `markdown` to `requirements.txt`
+- [x] Deploy and verify all blog pages
+
+## Future Enhancements (Based on Feedback)
+- [ ] **Usage Dashboard:** Endpoint for agents to check balance/history (`GET /v1/usage`) <!-- id: 30 -->
+- [ ] **Streaming Support:** Enable streaming responses for long-running tasks <!-- id: 31 -->
+- [ ] **Agent Reputation:** Implement reputation scores for trusted agents <!-- id: 32 -->

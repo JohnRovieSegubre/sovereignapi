@@ -1,0 +1,68 @@
+# Implementation Plan: The Sovereign Mint (Multi-Currency Support)
+
+**Date:** 2026-02-08
+**Status:** 🟢 APPROVED (Revised with Security Fixes)
+
+---
+
+## Architecture: "The Casino Model"
+
+| Component | Role |
+| :--- | :--- |
+| **Watchers** (Cashiers) | Monitor blockchains (Lightning, Polygon, Monero) for deposits. |
+| **SovereignMint** (Vault) | Creates and validates Bearer Tokens (Macaroons). |
+| **Gateway** (Floor) | Accepts tokens, verifies, deducts, forwards to AI. |
+
+---
+
+## Critical Fixes (From Review)
+
+> [!CAUTION]
+> **Fix 1: Immutable Token Trap**
+> Macaroons are immutable. After spending, we return a NEW token with updated balance via `X-Sovereign-Balance-Token` header. Client MUST use the new token for subsequent requests.
+
+> [!WARNING]
+> **Fix 2: Double Mint Idempotency**
+> The Mint stores all `identifier` values in `mint_history.json`. If a Watcher script crashes and retries, it will be rejected.
+
+> [!IMPORTANT]
+> **Fix 3: Admin IP Whitelist**
+> `/v1/admin/mint` only accepts requests from `127.0.0.1` (localhost).
+
+---
+
+## Proposed Changes
+
+### [MODIFY] [gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py)
+- Add `SovereignMint` class with `mint_token()` and `verify_and_spend()`.
+- Add `/v1/admin/mint` endpoint with IP whitelist + Admin Key check.
+- Update auth middleware to accept `Authorization: Bearer <MACAROON>`.
+- Return `X-Sovereign-Balance-Token` header with new token after spend.
+
+### [NEW] `.agent/secure/mint_secret.json`
+```json
+{"MINT_SECRET": "<32-char-random-string>"}
+```
+
+### [NEW] `.agent/data/mint_history.json`
+- Auto-created. Stores used deposit identifiers for idempotency.
+
+---
+
+## Verification Plan
+
+1. Install: `pip install pymacaroons`
+2. Start Gateway: `python gateway_server.py`
+3. Mint Token:
+   ```bash
+   curl -X POST http://localhost:8000/v1/admin/mint -H "X-Admin-Key: <SECRET>" -H "Content-Type: application/json" -d "{\"amount_sats\": 1000, \"identifier\": \"test_deposit_001\"}"
+   ```
+4. Spend Token:
+   ```bash
+   curl -X POST http://localhost:8000/v1/chat/completions -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d "{\"model\": \"sovereign-r1\", \"messages\": [{\"role\": \"user\", \"content\": \"test\"}]}"
+   ```
+5. Verify: Check `X-Sovereign-Balance-Token` in response headers.
+
+---
+
+**Ready for implementation.**

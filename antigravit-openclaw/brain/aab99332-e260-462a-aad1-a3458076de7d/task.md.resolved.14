@@ -1,0 +1,9 @@
+# Tasks
+
+- [x] Install Antigravity Kit `vudovn/antigravity-kit` <!-- id: 0 -->
+- [x] Configure Orchestrator Agent <!-- id: 1 -->
+- [x] Demonstrate Agent Creation <!-- id: 2 -->
+- [ ] Prepare Migration to New Workspace <!-- id: 3 -->
+    - [x] Explain local nature of .agent folder <!-- id: 4 -->
+    - [x] Add `MIGRATION_GUIDE.md` <!-- id: 5 -->
+    - [ ] Create `migration_kit.zip` <!-- id: 6 -->

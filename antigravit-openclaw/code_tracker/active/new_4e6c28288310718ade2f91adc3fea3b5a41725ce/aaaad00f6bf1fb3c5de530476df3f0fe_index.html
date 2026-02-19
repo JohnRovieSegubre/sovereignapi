@@ -1,0 +1,116 @@
+Ï*<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InkDrop - Your Printer, Anywhere</title>
+    <!-- Include Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                orange: '#FF6B00', // High visibility orange
+                dark: '#1A1A1A',   // Minimalist dark grey
+                light: '#F3F4F6',
+              }
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-brand-light flex items-center justify-center h-screen font-sans">
+    <div id="upload-container" class="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-xl border-t-4 border-brand-orange">
+        <div class="text-center">
+             <h1 class="text-4xl font-extrabold text-brand-dark tracking-tight">InkDrop</h1>
+             <p class="text-sm font-medium text-brand-orange uppercase tracking-wider mt-1">Your Printer, Anywhere.</p>
+        </div>
+        <p class="text-center text-gray-600">Upload your PDF document to get a secure print code.</p>
+        
+        <!-- File upload form -->
+        <form id="upload-form" class="space-y-6">
+            <div>
+                <label for="file-input" class="block mb-2 text-sm font-medium text-gray-700">Choose a PDF file</label>
+                <input type="file" id="file-input" name="file" accept=".pdf" required class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-brand-orange hover:file:bg-orange-100 transition-colors"/>
+            </div>
+            <button type="submit" class="w-full px-4 py-3 text-white bg-brand-orange rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-opacity-50 font-bold text-lg shadow-lg transform transition hover:-translate-y-0.5">
+                Get Print Code
+            </button>
+        </form>
+        <!-- Area to display messages or loading indicators -->
+        <div id="message-area" class="text-center"></div>
+    </div>
+
+    <!-- This container will be shown after a successful upload -->
+    <div id="result-container" style="display: none;" class="w-full max-w-lg p-8 text-center bg-white rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold text-green-600">Upload Successful!</h2>
+        <p class="mt-4 text-gray-600">Take this code to the kiosk to print your document:</p>
+        <div id="print-code" class="my-4 text-5xl font-bold text-gray-800 tracking-widest bg-gray-100 p-4 rounded-lg"></div>
+        <p class="text-gray-600">Total Price: <span id="price" class="font-bold"></span></p>
+    </div>
+
+    <script>
+        // Get references to the form and message area
+        const uploadForm = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const messageArea = document.getElementById('message-area');
+        const uploadContainer = document.getElementById('upload-container');
+        const resultContainer = document.getElementById('result-container');
+        const printCodeDisplay = document.getElementById('print-code');
+        const priceDisplay = document.getElementById('price');
+
+        // Handle the file upload form submission
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent the default form submission
+
+            // Show a loading message
+            messageArea.textContent = 'Uploading and processing your file...';
+            messageArea.className = 'text-blue-600';
+
+            // Get the file from the input
+            const file = fileInput.files[0];
+            if (!file) {
+                messageArea.textContent = 'Please select a file.';
+                messageArea.className = 'text-red-600';
+                return;
+            }
+
+            // Create a FormData object to send the file
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // Send the file to the server's /upload endpoint
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Server responded with an error.');
+                }
+
+                // Get the JSON response from the server
+                const result = await response.json();
+
+                // Display the results
+                printCodeDisplay.textContent = result.printCode;
+                priceDisplay.textContent = `$${(result.price / 100).toFixed(2)}`;
+                
+                // Hide the upload form and show the result
+                uploadContainer.style.display = 'none';
+                resultContainer.style.display = 'block';
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                messageArea.textContent = 'An error occurred during upload. Please try again.';
+                messageArea.className = 'text-red-600';
+            }
+        });
+    </script>
+</body>
+</html>
+Ï**cascade08"(4e6c28288310718ade2f91adc3fea3b5a41725ce2@file:///C:/Users/rovie%20segubre/Downloads/new/public/index.html:.file:///C:/Users/rovie%20segubre/Downloads/new

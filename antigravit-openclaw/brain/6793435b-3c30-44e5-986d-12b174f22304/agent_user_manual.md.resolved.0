@@ -1,0 +1,156 @@
+# Sovereign Intelligence API — Agent User Manual
+
+> **For AI Agents and Their Developers**  
+> *The alternative to OpenAI that you own and control.*
+
+---
+
+## Quick Start (30 seconds)
+
+```python
+from sovereign import SovereignClient
+
+client = SovereignClient(
+    api_key="sk-sov-xxx",           # Your License (get one below)
+    private_key="0x..."              # Your Polygon Wallet (for auto-pay)
+)
+
+response = client.chat.completions.create(
+    model="sovereign-r1",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+
+print(response["choices"][0]["message"]["content"])
+```
+
+---
+
+## Core Concepts
+
+### 1. API Key (Your License)
+Format: `sk-sov-{32 hex chars}`
+
+This is your **identity**. It proves you're a registered agent.
+- Persistent (doesn't expire)
+- One per agent
+- Get yours: Contact the Gateway operator
+
+### 2. Macaroon (Your Fuel)
+A cryptographic token containing your **balance**.
+- Liquid (transferable to other agents)
+- Decreases with each request
+- Auto-rotates after every successful call
+
+### 3. Auto-Pay (Self-Refueling)
+When your fuel runs empty, the SDK:
+1. Sends USDC on Polygon to the Gateway
+2. Waits for confirmation (~15 seconds)
+3. Claims a fresh Macaroon from the Mailbox
+4. Retries your request automatically
+
+---
+
+## Error Codes
+
+| Code | Meaning | SDK Action |
+|:-----|:--------|:-----------|
+| **200** | Success | Extract response, save new Macaroon |
+| **401** | Invalid API Key | FATAL - Check your `sk-sov-xxx` |
+| **402** | Out of Fuel | Auto-pay triggers (if wallet funded) |
+| **403** | Token Rejected (Replay) | Macaroon was already used |
+
+---
+
+## Configuration (Environment Variables)
+
+```bash
+# Required
+SOVEREIGN_API_KEY=sk-sov-xxx
+
+# For Auto-Pay (optional but recommended)
+AGENT_PRIVATE_KEY=0x...  # Polygon wallet with MATIC + USDC
+
+# Advanced
+GATEWAY_URL=http://34.55.175.24:8000/v1
+GATEWAY_WALLET=0xC8Dc...  # Where USDC goes
+MOCK_MODE=1               # Set to skip real payments (dev only)
+```
+
+---
+
+## Models Available
+
+| Model | Price (sats) | Use Case |
+|:------|:-------------|:---------|
+| `sovereign-r1` | 5 | Fast, cheap tasks |
+| `sovereign-pro` | 100 | Complex reasoning |
+| `sovereign-vision` | 15 | Image understanding |
+
+---
+
+## Advanced: Manual Token Management
+
+If you prefer to manage Macaroons yourself:
+
+```python
+# Get a token manually
+client.set_token("MDA0N...")
+
+# Check fuel status
+print(client.get_fuel_level())  # "LOADED" or "EMPTY"
+
+# Transfer fuel to another agent
+other_agent_token = client.token  # Send this string
+```
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|:--------|:------|:----|
+| `401 Invalid API Key` | Wrong/missing key | Check `SOVEREIGN_API_KEY` |
+| [402](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/gateway_server.py#91-110) loop forever | Wallet has no USDC | Fund your Polygon wallet |
+| `Timeout on claim` | Watcher is offline | Contact Gateway operator |
+| `403 Spent Token` | Using old Macaroon | Let SDK rotate automatically |
+
+---
+
+## Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  YOUR AI AGENT                      │
+│  ┌─────────────────────────────────────────────────┤
+│  │  SovereignClient (SDK)                          │
+│  │   • API Key (Identity)                          │
+│  │   • Macaroon (Fuel)                             │
+│  │   • Auto-Pay (Self-Refuel)                      │
+└──┴──────────────────┬──────────────────────────────┘
+                      │
+         ┌────────────▼────────────┐
+         │    Gateway Server       │
+         │  • Validates API Key    │
+         │  • Checks Macaroon      │
+         │  • Routes to LLM        │
+         │  • Returns New Token    │
+         └────────────┬────────────┘
+                      │
+         ┌────────────▼────────────┐
+         │   Polygon Blockchain    │
+         │  (USDC Payments)        │
+         └─────────────────────────┘
+```
+
+---
+
+## Getting Your API Key
+
+1. Contact the Gateway operator
+2. They will run: `python api_key_registry.py create "YourAgentName"`
+3. You receive: `sk-sov-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+4. Store it securely (like an OpenAI key)
+
+---
+
+*This is your OpenAI replacement. You own the infrastructure.*

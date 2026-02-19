@@ -1,0 +1,31 @@
+# Walkthrough: OpenClaw Local Installation
+
+We have successfully created and executed a custom Windows installer for the OpenClaw AI agent, configured to run completely locally with privacy-focused models.
+
+## 🎯 Goals Achieved
+-   [x] **Bypass Cloud Requirement:** Modified the OpenClaw setup to use local models instead of OpenAI/Anthropic.
+-   [x] **Automated Setup:** Created [install.ps1](file:///c:/Users/rovie%20segubre/.gemini/antigravity/openclaw-local-setup/install.ps1) to handle the complex dependency chain (Node.js -> Ollama -> Model -> Agent).
+-   [x] **Configuration Hack:** successfully identified the correct schema `models.providers.openai` to force OpenClaw to accept the local Ollama instance.
+-   [x] **Hardware Optimization:** Selected `qwen2.5:7b` (Q4 quantization) to balance intelligence and performance for the user's i5/16GB system.
+
+## 🔍 Verification Results
+The installation log confirms all steps succeeded:
+
+1.  **AI Engine:** Ollama is running is reachable.
+2.  **AI Model:** Qwen 2.5 (7B) is loaded.
+3.  **Agent Logic:** OpenClaw CLI is installed and configured.
+    *   **Provider:** OpenAI (shimmed for Ollama compatibility)
+    *   **Base URL:** `http://localhost:11434/v1`
+    *   **Model:** `qwen2.5:7b`
+
+## 🚀 Launching the Agent
+
+### Correct Command
+Start the agent gateway with:
+```powershell
+clawdbot gateway run
+```
+
+### Accessing the Interface
+Open your browser to:
+`http://localhost:3000` (Default Port)

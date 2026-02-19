@@ -1,0 +1,29 @@
+Œ# Secrets & Keys
+.env
+config/
+.agent/secure/
+.agent/data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+
+# Wallet files (contain tokens)
+.agent/wallet/
+Œ*cascade08"(d4e7a325d0144b3814ef864593774f7a395132062?file:///c:/Users/rovie%20segubre/agent/sovereign_api/.gitignore:&file:///c:/Users/rovie%20segubre/agent

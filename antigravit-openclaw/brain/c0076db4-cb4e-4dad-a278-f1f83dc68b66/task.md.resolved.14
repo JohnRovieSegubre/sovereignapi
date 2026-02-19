@@ -1,0 +1,14 @@
+# Task: Configure Domain & Blog Infrastructure
+
+- [ ] DNS Configuration (Cloudflare) <!-- id: 0 -->
+    - [ ] Guide user to set A record → GCP IP for `api.sovereign-api.com` <!-- id: 1 -->
+    - [ ] Guide user to set CNAME → Hashnode for `blog.sovereign-api.com` <!-- id: 2 -->
+- [ ] Update Gateway Server <!-- id: 3 -->
+    - [ ] Change `SITE_URL` from ngrok to `https://api.sovereign-api.com` <!-- id: 4 -->
+    - [ ] Update [Moltbook_Registration.json](file:///c:/Users/rovie%20segubre/agent/Moltbook_Registration.json) endpoint <!-- id: 5 -->
+- [ ] Build Hashnode Blog Automation <!-- id: 6 -->
+    - [ ] Create `hashnode_blogger.py` (GraphQL API posting) <!-- id: 7 -->
+    - [ ] Register action in [actions.json](file:///c:/Users/rovie%20segubre/agent/.agent/actions.json) <!-- id: 8 -->
+    - [ ] Write first blog post: "Sovereign Intelligence API — The OpenAI Replacement for Autonomous Agents" <!-- id: 9 -->
+- [ ] Hook into Watchdog Loop <!-- id: 10 -->
+    - [ ] Create blog content scheduler in marketing loop <!-- id: 11 -->

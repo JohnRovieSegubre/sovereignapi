@@ -1,0 +1,26 @@
+# Awesome Skills Integration Plan
+
+## Goal Description
+The user wants to integrate skills from `https://github.com/sickn33/antigravity-awesome-skills`. Because this is external code, I must perform a **Security Audit** before installation.
+
+## User Review Required
+> [!IMPORTANT]
+> I will verify the safety of these skills before adding them. I will specifically check for:
+> 1. Dangerous shell commands.
+> 2. Exfiltration of data (curl/fetch to unknown servers).
+> 3. Infinite loops or resource exhaustion.
+
+## Proposed Changes
+
+### 1. Analysis (Sandboxed)
+- Clone the repo to `temp_awesome_skills`.
+- Inspect all `.py`, `.js`, and [.md](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/refined_prompt.md) files.
+- Produce a **Safety Report**.
+
+### 2. Installation
+- If safe: Move selected skills to `.agent/skills/`.
+- If unsafe: Report specific threats and abort unsafe components.
+
+## Verification
+- List the new skills found.
+- Verify one new skill works as expected.

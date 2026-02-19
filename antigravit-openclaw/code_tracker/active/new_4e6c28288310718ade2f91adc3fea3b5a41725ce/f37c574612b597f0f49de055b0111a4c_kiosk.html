@@ -1,0 +1,221 @@
+ÂK<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>InkDrop Kiosk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#FF6B00',
+              dark: '#1A1A1A',
+              light: '#F3F4F6',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+
+<body class="bg-brand-dark flex items-center justify-center h-screen font-sans">
+  <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-2xl border-t-8 border-brand-orange">
+    <div id="code-container">
+      <div class="text-center mb-6">
+        <h1 class="text-4xl font-extrabold text-brand-dark tracking-tight">InkDrop</h1>
+        <p class="text-gray-500 text-sm tracking-wider uppercase">Self-Service Printing</p>
+      </div>
+      <p class="text-center text-gray-800 font-medium">Enter your 6-digit code to start.</p>
+      <input id="code-input"
+        class="w-full mt-6 p-4 text-center text-4xl font-mono tracking-widest border-2 border-gray-300 rounded focus:border-brand-orange focus:ring-brand-orange focus:outline-none placeholder-gray-300"
+        maxlength="6" placeholder="000000" />
+      <button id="fetch-job-button"
+        class="mt-6 w-full px-4 py-4 bg-brand-orange text-white text-xl font-bold rounded shadow-lg hover:bg-orange-600 transition-transform transform active:scale-95">Get
+        Print Job</button>
+    </div>
+
+    <div id="options-container" style="display:none;">
+      <h2 class="text-xl font-bold">Customize Your Print</h2>
+      <p>File: <span id="filename-display"></span></p>
+      <p>Pages: <span id="pages-display"></span></p>
+
+      <label class="block mt-3">Copies</label>
+      <div class="flex items-center mt-1">
+        <button id="copies-decrement" class="px-3 py-1 bg-gray-200 rounded">-</button>
+        <input id="copies-input" value="1" readonly class="w-20 text-center mx-2 p-2 border" />
+        <button id="copies-increment" class="px-3 py-1 bg-gray-200 rounded">+</button>
+      </div>
+
+      <label class="block mt-3">Color</label>
+      <select id="color-select" class="w-full p-2 border mt-1">
+        <option value="bw">Black &amp; White</option>
+        <option value="color">Color</option>
+      </select>
+
+      <label class="block mt-3">Paper Size</label>
+      <select id="paper-select" class="w-full p-2 border mt-1">
+        <option value="letter">Letter (8.5x11)</option>
+        <option value="legal">Legal (8.5x14)</option>
+      </select>
+
+      <div class="mt-3">
+        <label><input id="duplex-toggle" type="checkbox" /> Double-sided (Duplex)</label>
+      </div>
+
+      <div class="mt-4 text-center">
+        <div>Total: <span id="total-price-display" class="text-2xl font-bold">$0.00</span></div>
+      </div>
+
+      <button id="proceed-to-payment-button" class="mt-4 w-full px-4 py-2 bg-green-600 text-white rounded">Proceed to
+        Payment</button>
+    </div>
+
+    <div id="payment-container" style="display:none;">
+      <h2 class="text-xl font-bold">Complete Payment</h2>
+      <div>Final Amount: <span id="final-amount-display" class="font-bold"></span></div>
+      <form id="payment-form">
+        <div id="payment-element" class="mt-3 p-3 border"></div>
+        <button id="pay-button" class="mt-4 w-full px-4 py-2 bg-green-600 text-white rounded">Pay and Print</button>
+      </form>
+    </div>
+
+    <div id="message-area" class="mt-4 text-center"></div>
+  </div>
+
+  <script>
+    let stripe, elements;
+    let pricing = {};
+    let currentJob = {};
+    let printCode = '';
+
+    const ui = {
+      codeInput: document.getElementById('code-input'),
+      fetchJobButton: document.getElementById('fetch-job-button'),
+      filenameDisplay: document.getElementById('filename-display'),
+      pagesDisplay: document.getElementById('pages-display'),
+      copiesInput: document.getElementById('copies-input'),
+      copiesDec: document.getElementById('copies-decrement'),
+      copiesInc: document.getElementById('copies-increment'),
+      colorSelect: document.getElementById('color-select'),
+      paperSelect: document.getElementById('paper-select'),
+      duplexToggle: document.getElementById('duplex-toggle'),
+      totalPrice: document.getElementById('total-price-display'),
+      proceedBtn: document.getElementById('proceed-to-payment-button'),
+      paymentContainer: document.getElementById('payment-container'),
+      optionsContainer: document.getElementById('options-container'),
+      codeContainer: document.getElementById('code-container'),
+      finalAmountDisplay: document.getElementById('final-amount-display'),
+      messageArea: document.getElementById('message-area'),
+    };
+
+    async function loadConfig() {
+      const r = await fetch('/config');
+      const j = await r.json();
+      if (!j.publishableKey) return showMessage('Server configuration missing publishable key', 'error');
+      stripe = Stripe(j.publishableKey);
+      pricing = j.pricing;
+      attachListeners();
+    }
+
+    function attachListeners() {
+      ui.fetchJobButton.addEventListener('click', handleFetchJob);
+      ui.copiesDec.addEventListener('click', () => { if (parseInt(ui.copiesInput.value) > 1) { ui.copiesInput.value = parseInt(ui.copiesInput.value) - 1; updateTotal(); } });
+      ui.copiesInc.addEventListener('click', () => { ui.copiesInput.value = parseInt(ui.copiesInput.value) + 1; updateTotal(); });
+      ui.colorSelect.addEventListener('change', updateTotal);
+      ui.paperSelect.addEventListener('change', updateTotal);
+      ui.duplexToggle.addEventListener('change', updateTotal);
+      ui.proceedBtn.addEventListener('click', handleProceedPayment);
+      document.getElementById('pay-button').addEventListener('click', handlePayAndPrint);
+    }
+
+    function updateTotal() {
+      const copies = parseInt(ui.copiesInput.value, 10);
+      const isColor = ui.colorSelect.value === 'color';
+      const paper = ui.paperSelect.value;
+      const isDuplex = ui.duplexToggle.checked;
+      let pagePrice = isColor ? pricing.color : pricing.bw;
+      let pricePerCopy = currentJob.numPages * pagePrice;
+      if (paper === 'legal') pricePerCopy *= pricing.legalMultiplier;
+      if (isDuplex) pricePerCopy *= pricing.duplexDiscount;
+      const total = Math.round(pricePerCopy * copies);
+      ui.totalPrice.textContent = `$${(total / 100).toFixed(2)}`;
+    }
+
+    async function handleFetchJob() {
+      printCode = ui.codeInput.value.trim();
+      if (printCode.length !== 6) return showMessage('Enter valid 6-digit code', 'error');
+      showMessage('Fetching job...', 'info');
+      const resp = await fetch('/get-job-details', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printCode }) });
+      const j = await resp.json();
+      if (!resp.ok) return showMessage(j.error || 'Job not found', 'error');
+      currentJob = j;
+      ui.filenameDisplay.textContent = j.filename;
+      ui.pagesDisplay.textContent = j.numPages;
+      ui.codeContainer.style.display = 'none';
+      ui.optionsContainer.style.display = 'block';
+      updateTotal();
+      showMessage('', 'clear');
+    }
+
+    async function handleProceedPayment() {
+      showMessage('Creating payment...', 'info');
+      const options = {
+        printCode,
+        copies: parseInt(ui.copiesInput.value, 10),
+        isColor: ui.colorSelect.value === 'color',
+        paperSize: ui.paperSelect.value,
+        isDuplex: ui.duplexToggle.checked,
+      };
+      const resp = await fetch('/create-payment-intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(options) });
+      const j = await resp.json();
+      if (!resp.ok) return showMessage(j.error || 'Failed to create payment', 'error');
+
+      elements = stripe.elements({ clientSecret: j.clientSecret });
+      const paymentEl = elements.create('payment');
+      paymentEl.mount('#payment-element');
+
+      ui.finalAmountDisplay.textContent = `$${(j.finalAmount / 100).toFixed(2)}`;
+      ui.optionsContainer.style.display = 'none';
+      ui.paymentContainer.style.display = 'block';
+      showMessage('', 'clear');
+    }
+
+    async function handlePayAndPrint(e) {
+      e.preventDefault();
+      setLoading(true);
+      try {
+        const { error } = await stripe.confirmPayment({ elements, redirect: 'if_required' });
+        if (error) throw error;
+        showMessage('Payment succeeded. Sending to printer...', 'info');
+
+        const pr = await fetch('/print', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ printCode }) });
+        const jr = await pr.json();
+        if (!pr.ok) throw new Error(jr.error || 'Print failed');
+        showMessage('Printed successfully. File deleted.', 'success');
+        ui.paymentContainer.innerHTML = '';
+      } catch (err) {
+        showMessage(err.message || 'Payment/print failed', 'error');
+        setLoading(false);
+      }
+    }
+
+    function showMessage(msg, type = 'info') {
+      ui.messageArea.textContent = msg;
+      ui.messageArea.className = type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-gray-600';
+    }
+
+    function setLoading(loading) {
+      document.getElementById('pay-button').disabled = loading;
+    }
+
+    loadConfig();
+  </script>
+</body>
+
+</html>ÂK*cascade08"(4e6c28288310718ade2f91adc3fea3b5a41725ce2@file:///C:/Users/rovie%20segubre/Downloads/new/public/kiosk.html:.file:///C:/Users/rovie%20segubre/Downloads/new

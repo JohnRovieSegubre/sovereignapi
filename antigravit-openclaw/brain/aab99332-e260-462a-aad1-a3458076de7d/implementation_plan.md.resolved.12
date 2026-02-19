@@ -1,0 +1,32 @@
+# Awesome Skills Installation Plan
+
+## Goal Description
+Install all 243+ skills from `sickn33/antigravity-awesome-skills` into `.agent/skills/`, but renamed using a "Deep Namespace" strategy (e.g., `growth-seo-audit`) to emulate folder organization within Antigravity's flat structure requirements.
+
+## Proposed Changes
+I will use a Python script to automate this decision-making and copying process.
+
+### Category Mapping Logic
+The script will detect keywords in the skill name to assign prefixes:
+
+| Keyword | Prefix |
+| :--- | :--- |
+| `seo`, `keyword` | `growth-seo-` |
+| `social`, `linkedin`, `twitter` | `growth-social-` |
+| `copy`, `email`, `blog` | `growth-content-` |
+| `metasploit`, `hack`, `exploit`, `pentest` | `sec-redteam-` |
+| `owasp`, `xss`, `injection` | `sec-psirt-` |
+| `react`, `frontend`, `css` | `dev-frontend-` |
+| `docker`, `aws`, `azure`, `terraform` | `dev-ops-` |
+| `loki`, `autonomous`, `agent` | `auto-agent-` |
+| *(Default for others)* | `general-` |
+
+### Execution
+1.  Run `scripts/install_skills.py` (which I will create).
+2.  The script reads `temp_awesome_skills/skills/`.
+3.  It copies each folder to `.agent/skills/` with the new name.
+4.  It updates the `name:` field in `SKILL.md` to match the new folder name (critical for Antigravity compatibility).
+
+## Verification
+- List `.agent/skills` to confirm the new sorting.
+- Test one renamed skill (`growth-seo-audit`) to ensure it loads.

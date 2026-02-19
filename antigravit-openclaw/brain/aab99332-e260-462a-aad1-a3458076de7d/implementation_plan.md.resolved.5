@@ -1,0 +1,18 @@
+# Antigravity Kit Installation Plan
+
+## Goal Description
+The user wants to install the `antigravity-kit`. I have verified that it contains a comprehensive set of agents, skills, and workflows in the `.agent` directory. I will install them all.
+
+## User Review Required
+> [!IMPORTANT]
+> This will add a large number of capabilities (Skills/Workflows) to your workspace.
+
+## Proposed Changes
+
+### Installation Steps
+1.  **Move Directory**: Move `temp_kit/.agent` to `./.agent`.
+2.  **Cleanup**: Remove the `temp_kit` directory.
+3.  **Verification**: List the installed workflows to confirm success.
+
+## Verification Plan
+- Run `list_dir .agent/workflows` to confirm keys commands like `/brainstorm` are present.

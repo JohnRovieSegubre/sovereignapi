@@ -1,0 +1,24 @@
+# Sovereign Intelligence API — Landing Page
+
+## Planning
+- [x] Design landing page structure and content
+- [x] Create implementation plan & get user approval
+
+## Implementation
+- [x] Build landing page HTML/CSS/JS
+  - [x] Hero section with value proposition
+  - [x] Live API demo section (fetches /v1/models)
+  - [x] Pricing/models table
+  - [x] SDK quickstart code examples
+  - [x] "For Agents" section (machine-readable)
+  - [x] Links to blog, docs, Moltbook
+- [x] Add root route to gateway_server.py
+- [x] Update deploy_to_cloud.ps1 to include landing folder
+
+## Deployment
+- [x] Deploy to GCP server
+
+## Verification
+- [x] Landing page loads at https://api.sovereign-api.com/
+- [x] All sections render correctly
+- [x] Particle animation works

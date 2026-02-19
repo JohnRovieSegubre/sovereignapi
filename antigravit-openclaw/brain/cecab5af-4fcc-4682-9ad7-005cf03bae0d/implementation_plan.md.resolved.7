@@ -1,0 +1,27 @@
+# Improve Riddle Segmentation & Display (AI Selection & Filtering)
+
+The goal is to ensure the bot behaves like a true **AI Assistant** by reviewing video titles and descriptions *before* downloading, ensuring they are actual riddle videos and not compilations or irrelevant content.
+
+## Proposed Changes
+
+### [MODIFY] [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py)
+- **New Method**: `check_video_relevance(title, description) -> bool`
+    - Uses the LLM to analyze the metadata.
+    - Prompt: "Is this video likely to contain short riddles suitable for extraction? Title: {t}, Desc: {d}. Answer YES/NO."
+
+### [MODIFY] [youtube_client.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/youtube_client.py)
+- **Duration Parsing**: Fetch `contentDetails` to get video duration.
+- **Filtering**: Return duration in the video metadata dict so the bot can skip long videos.
+
+### [MODIFY] [riddle_bot.py](file:///c:/Users/rovie%20segubre/clipper/riddle_bot.py)
+- **Selection Loop**:
+    1.  Fetch recent videos (metadata only).
+    2.  **Filter 1 (Hard)**: Skip if duration > 20 mins (Compilations).
+    3.  **Filter 2 (AI)**: Call `check_video_relevance(title, desc)`.
+    4.  **Download**: Only if both filters pass.
+
+## Verification Plan
+
+### Manual Verification
+- Run [riddle_bot.py](file:///c:/Users/rovie%20segubre/clipper/riddle_bot.py).
+- Observe logs: "AI checking 'Video Title'..." -> "Skipping (Not a riddle video)" or "Downloading...".

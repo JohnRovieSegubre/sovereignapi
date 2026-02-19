@@ -1,0 +1,118 @@
+# Marketing Workflow: Sovereign API on Moltbook
+
+## The Product We're Selling
+
+**Sovereign Intelligence API** — a drop-in OpenAI replacement where AI agents pay with crypto (USDC on Polygon) and receive Macaroon tokens as "fuel." It's the "Stripe for AI."
+
+**Key selling points for other agents on Moltbook:**
+- Drop-in SDK (`from sdk.sovereign import SovereignClient`)
+- Auto-pay via Polygon (no human needed)
+- 3 models at transparent prices (5 / 25 / 50 sats)
+- Token rotation (replay-proof security)
+- Runs 24/7 on cloud (Docker + GCloud)
+
+---
+
+## The Tools We Already Have
+
+| Tool | File | What it does |
+|------|------|-------------|
+| **Post to Moltbook** | [post_and_verify_moltbook.py](file:///c:/Users/rovie%20segubre/agent/post_and_verify_moltbook.py) | Posts content + auto-solves math CAPTCHA |
+| **Explore Moltbook** | [moltbook_explore.py](file:///c:/Users/rovie%20segubre/agent/moltbook_explore.py) | Reads latest 50 posts, scores relevance + safety |
+| **Create Submolt** | [create_submolt.py](file:///c:/Users/rovie%20segubre/agent/create_submolt.py) | Creates new communities (e.g., `m/agents`) |
+| **Check Status** | [check_moltbook_status.py](file:///c:/Users/rovie%20segubre/agent/check_moltbook_status.py) | Checks our agent's standing |
+| **Watchdog** | [scripts/watchdog.py](file:///c:/Users/rovie%20segubre/agent/scripts/watchdog.py) | Keeps the Monitor alive 24/7 |
+| **Monitor** | [scripts/antigravity_monitor.py](file:///c:/Users/rovie%20segubre/agent/scripts/antigravity_monitor.py) | Watches `.agent/inbox/` for task files and executes them |
+| **Actions Registry** | `.agent/actions.json` | Whitelist of commands the Monitor can run |
+
+---
+
+## Proposed Workflow
+
+### Phase 1: Setup (You + Me, One-Time)
+
+1. **Create the `m/sovereign` submolt** on Moltbook using `create_submolt.py`
+   - This is our "home base" community for the Sovereign API product
+
+2. **Register marketing actions** in `.agent/actions.json`
+   - Add entries like `"post_sovereign_update"`, `"scan_moltbook"`, `"reply_to_agents"` that map to real commands
+
+3. **Create a `moltbook_marketer.py` script** (new file) that:
+   - Uses `moltbook_explore.py` logic to find agents talking about AI, compute, or payments
+   - Crafts contextual replies mentioning the Sovereign API
+   - Uses `post_and_verify_moltbook.py` logic to publish them
+   - Respects rate limits (Moltbook's 30-min cooldown)
+
+### Phase 2: Content Calendar (24/7 via Watchdog)
+
+The Watchdog + Monitor system gives us a **cron-like scheduler**. We drop `.md` task files into `.agent/inbox/` and the Monitor executes them.
+
+#### Daily Content Rotation (4 posts/day, spaced 6 hours apart)
+
+| Time | Post Type | Content |
+|------|-----------|---------|
+| **00:00** | 📊 **Status Update** | "Sovereign Node is LIVE. 142 requests served today. Uptime: 99.7%. Models: R1 (5 sats), Llama3 (25 sats), GPT-4o (50 sats). `m/sovereign`" |
+| **06:00** | 🧠 **Technical Thread** | Deep-dive on one feature (e.g., "How Macaroon tokens prevent replay attacks" or "Why we use Chainlink oracles for USD→Sats conversion") |
+| **12:00** | 🤝 **Community Engagement** | Reply to relevant posts found by `moltbook_explore.py`. Offer free trial credits to interested agents |
+| **18:00** | 💡 **Use Case Showcase** | Show a real example: "Agent X asked 'What is 2+2?' and paid 5 sats. Here's the full flow." |
+
+#### How it works technically:
+
+```
+Watchdog (24/7)
+  └── Monitor (polls .agent/inbox/ every 3s)
+        └── Finds: "marketing_06am.md"
+              └── Reads: "RUN: post_sovereign_update"
+                    └── Executes: python moltbook_marketer.py --type technical
+                          └── Posts to m/sovereign on Moltbook
+```
+
+A separate scheduler script (or Windows Task Scheduler) drops the `.md` files at the right times.
+
+### Phase 3: Community Growth (Week 2+)
+
+| Action | How |
+|--------|-----|
+| **Free Trial Credits** | Use `cloud_mint.py` to mint 100-sat tokens for interested agents. Post the claim instructions on Moltbook |
+| **Live Demo** | Post a "Try it now" thread with the SDK quick-start code and a pre-funded token |
+| **Agent Directory** | Use `api_key_registry.py list` to show how many agents are registered (social proof) |
+| **Network Intelligence** | Use `moltbook_explore.py` to find competitors or collaborators. Report findings to you |
+
+---
+
+## What I (the AI) Can Do 24/7
+
+With the Watchdog running, I can autonomously:
+1. ✅ **Post updates** to `m/sovereign` on a schedule
+2. ✅ **Scan Moltbook** for relevant conversations and flag them
+3. ✅ **Generate reports** (`moltbook_report.md`) for you to review
+4. ✅ **Mint trial tokens** for new users who ask
+
+What I **cannot** do without you:
+1. ❌ Approve new API keys (security decision)
+2. ❌ Change pricing (business decision)
+3. ❌ Respond to complex negotiations
+4. ❌ Fix bugs in the Gateway if something breaks
+
+---
+
+## Files Needed (New)
+
+| File | Purpose |
+|------|---------|
+| `moltbook_marketer.py` | The main marketing automation script |
+| `.agent/actions.json` | Updated with marketing commands |
+| `.agent/content_templates/` | Pre-written post templates for each content type |
+| `schedule_posts.py` | Drops task files into `.agent/inbox/` on a timer |
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Run `moltbook_marketer.py --dry-run` to verify posts are generated correctly without actually posting
+- Run `moltbook_explore.py` to confirm we can read the community feed
+
+### Manual Verification
+- You review the first batch of posts before enabling the 24/7 schedule
+- You approve the `actions.json` whitelist entries

@@ -1,0 +1,41 @@
+# Sovereign Mint: Task List
+
+## Phase 1-5: Core Infrastructure (COMPLETE)
+- [x] Gateway Server with L402 + Macaroon Auth
+- [x] Token Rotation ("Catch the Change")
+- [x] Replay Attack Protection
+- [x] Mailbox Protocol (PENDING_CLAIMS)
+- [x] Polygon Watcher (Chainlink Oracle)
+- [x] Cloud Deployment (Docker, GCloud @ 34.55.175.24)
+
+---
+
+## Phase 6: Sovereign SDK (COMPLETE)
+- [x] SDK Core Library ([sdk/sovereign.py](file:///c:/Users/rovie%20segubre/agent/sdk/sovereign.py))
+- [x] Test Agent ([sdk/agent_customer.py](file:///c:/Users/rovie%20segubre/agent/sdk/agent_customer.py))
+
+---
+
+## Phase 7: Decoupled Identity + Fuel (COMPLETE)
+- [x] **API Key Registry** ([api_key_registry.py](file:///c:/Users/rovie%20segubre/agent/api_key_registry.py))
+- [x] **Gateway Upgrade** ([gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py))
+- [x] **SDK Upgrade** ([sdk/sovereign.py](file:///c:/Users/rovie%20segubre/agent/sdk/sovereign.py))
+- [x] **Autonomous Core** ([autonomous_core.py](file:///c:/Users/rovie%20segubre/agent/autonomous_core.py))
+
+---
+
+## Phase 8: Model Transparency (COMPLETE)
+- [x] Transparent model names (`sovereign/deepseek-r1`)
+- [x] Model availability table in manual
+- [x] Internal pricing removed from gateway routes
+
+---
+
+## Phase 9: Public Ready Hardening (COMPLETE)
+- [x] Security Audit of `sovereign_api/` folder
+- [x] Removal of hardcoded IPs and Wallets (6 files)
+- [x] Environment-variable-first architecture
+- [x] Creation of [.gitignore](file:///c:/Users/rovie%20segubre/agent/.gitignore) and [.env.example](file:///c:/Users/rovie%20segubre/agent/sovereign_api/.env.example)
+- [x] Professional public [README.md](file:///c:/Users/rovie%20segubre/agent/README.md)
+- [x] Verification of zero leaked secrets via `grep`
+- [x] Production [docker-compose.yml](file:///c:/Users/rovie%20segubre/agent/docker-compose.yml) deployed to cloud

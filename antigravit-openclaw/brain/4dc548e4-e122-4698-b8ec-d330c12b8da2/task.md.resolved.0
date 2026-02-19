@@ -1,0 +1,13 @@
+# Task: Improved Typography & Overlays
+
+- [x] Research available tools for typography (MoviePy, Pillow, FFmpeg, HTML/CSS) <!-- id: 0 -->
+- [ ] Create Implementation Plan for Pillow-based Text Rendering <!-- id: 1 -->
+- [ ] **Optional**: Setup `html2image` for CSS-based rendering (if higher quality needed) <!-- id: 2 -->
+- [ ] Implement `TextRenderer` class using Pillow <!-- id: 3 -->
+    - [ ] Support custom accents/fonts
+    - [ ] Support text wrapping
+    - [ ] Support background boxes/styles
+- [ ] Refactor [shorts_render.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py) <!-- id: 4 -->
+    - [ ] Replace `drawtext` filter with [overlay](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py#29-33) filter
+    - [ ] Integrate `TextRenderer` to generate assets before FFmpeg call
+- [ ] Verify changes with a test render <!-- id: 5 -->

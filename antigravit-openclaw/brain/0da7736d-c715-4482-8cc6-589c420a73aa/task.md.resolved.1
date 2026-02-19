@@ -1,0 +1,22 @@
+# Task List: Comic/Manga Panel Animation System
+
+- [/] Project Setup & Environment
+    - [/] Create project structure
+    - [/] Create virtual environment setup script (or requirements.txt)
+    - [ ] Verify dependencies (SAM, MediaPipe, OpenCV, etc.)
+- [ ] Phase 1: Preprocessing & Assets
+    - [ ] Script: Crop and normalize images `preprocessing.py`
+    - [ ] Script: Mask extraction using SAM `segmentation.py`
+    - [ ] Script: Keypoint extraction using MediaPipe `keypoints.py`
+- [ ] Phase 2: Motion Planning & Validation (Skeleton)
+    - [ ] Script: Keypoint interpolation `motion_planner.py`
+    - [ ] Script: Render skeleton animation for validation `debug_skeleton.py`
+- [ ] Phase 3: Frame Generation (MVP)
+    - [ ] Script: Delaunay triangulation & Affine warping `warping.py`
+    - [ ] Script: Basic inpainting for holes `inpainting.py`
+- [ ] Phase 4: Refinement & Compositing
+    - [ ] Script: Temporal smoothing / Optical flow `temporal.py`
+    - [ ] Script: Composite & Export to MP4 `composite.py`
+    - [ ] Script: Main pipeline runner `main.py`
+- [ ] Phase 5: Testing & Metrics
+     - [ ] Implement SSIM and CLIP similarity checks

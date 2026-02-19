@@ -1,0 +1,68 @@
+# Walkthrough: Autonomous Moltbook Marketing Loop
+
+## What Was Built
+
+A self-sustaining marketing agent for the **Sovereign Intelligence API** on Moltbook.
+
+### New Files
+| File | Purpose |
+|------|---------|
+| [moltbook_marketing.py](file:///c:/Users/rovie%20segubre/agent/moltbook_marketing.py) | Autonomous marketing agent (scan → engage → self-chain) |
+| [.agent/data/marketing_state.json](file:///c:/Users/rovie%20segubre/agent/.agent/data/marketing_state.json) | Persistent state (cooldowns, replied targets, cycle count) |
+
+### Modified Files
+| File | Change |
+|------|--------|
+| [actions.json](file:///c:/Users/rovie%20segubre/agent/.agent/actions.json) | Added 3 marketing actions (`moltbook_market_scan`, `moltbook_market_engage`, `moltbook_market_loop`) |
+| [moltbook_explore.py](file:///c:/Users/rovie%20segubre/agent/moltbook_explore.py) | Fixed JSON key bug (`data` → `posts`), added timeout |
+
+## How the 24/7 Loop Works
+
+```mermaid
+graph TD
+    A[START_MONITOR.bat] --> B[watchdog.py]
+    B --> C[antigravity_monitor.py]
+    C -->|polls every 3s| D[.agent/inbox/]
+    D -->|finds marketing_loop_*.md| E[actions.json lookup]
+    E -->|moltbook_market_loop| F[moltbook_marketing.py loop]
+    F -->|1. Scan 200 posts| G[Filter spam, score targets]
+    G -->|2. Engage top target| H[Post reply on Moltbook]
+    H -->|3. Self-chain| I[Drop next task into inbox]
+    I --> D
+```
+
+**Key:** The loop is **self-perpetuating**. After each cycle, [moltbook_marketing.py](file:///c:/Users/rovie%20segubre/agent/moltbook_marketing.py) drops a new task file into `.agent/inbox/`, which the Monitor picks up ~35 minutes later. No human intervention needed.
+
+## Test Results
+
+### Cycle #1 — ✅ Success
+- **Posts Scanned:** 200
+- **Spam Filtered:** 163 (81.5% — mostly MBC20 minting spam)
+- **High-Value Targets:** 37
+- **Top Target:** `StratClawAI` (Score: 90) — discussing "Decision Graveyards: Negative Knowledge"
+- **Engagement:** ✅ Reply posted successfully
+- **Self-Chain:** ✅ `marketing_loop_20260209_232834.md` created in inbox
+- **State Saved:** `engage_count: 1`, `scan_count: 1`
+
+## How to Run
+
+### Option 1: Manual Single Cycle
+```powershell
+python moltbook_marketing.py loop
+```
+
+### Option 2: 24/7 Autonomous (via Watchdog)
+```powershell
+# Start the watchdog (it keeps the monitor alive forever)
+START_MONITOR.bat
+
+# The monitor will pick up any marketing_loop_*.md files from inbox
+# Each cycle self-chains the next one
+```
+
+### Option 3: Kick Off First Cycle Manually via Inbox
+Create a file `.agent/inbox/marketing_start.md`:
+```
+RUN: moltbook_market_loop
+```
+The monitor will execute it within 3 seconds.

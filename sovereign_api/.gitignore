@@ -1,0 +1,28 @@
+# Secrets & Keys
+.env
+config/
+.agent/secure/
+.agent/data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+
+# Wallet files (contain tokens)
+.agent/wallet/

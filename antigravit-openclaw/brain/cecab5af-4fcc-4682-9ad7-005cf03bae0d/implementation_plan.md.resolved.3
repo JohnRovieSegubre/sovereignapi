@@ -1,0 +1,44 @@
+# Vision-First Riddle Generation
+
+The goal is to use a **single Vision-Capable Model** (e.g., LLaVA via Ollama) to "see" the riddle and generate all 3 persona answers directly. This ensures the answers are grounded in the visual reality of the video.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Vision Model Requirement**: You must have a vision model running (e.g., `ollama run llava`).
+> The system will send the **Video Frame + Riddle Text** to this model and ask it to: "Roleplay as ChatGPT, Grok, and Claude debated this riddle [IMAGE CONTEXT]."
+
+## Proposed Changes
+
+### Core Utilities
+#### [MODIFY] [ffmpeg_utils.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/ffmpeg_utils.py)
+- **New Function**: `extract_frame(video_path, timestamp, output_path)`
+
+### AI & Logic (`src/clipper/processing`)
+
+#### [MODIFY] [analyze.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py)
+- **Interface Update**: Update `generate(prompt)` to `generate(prompt, image_path=None)`.
+- **Ollama Adapter**: Update `AIAnalyzerWithOllama.generate` to pass `images=[image_path]` to the `ollama.chat` call if an image is provided.
+- **Stub**: Update stub to ignore image argument.
+
+#### [MODIFY] [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py)
+- **Logic Change**:
+    1.  Identify riddle time.
+    2.  Extract frame at `question_start + 2s`.
+    3.  Call `self.llm.generate(prompt, image_path=frame)`.
+    4.  Prompt: "Look at this image. The riddle text is '{text}'. Generate 3 short distinct answers from these personas..."
+
+### Configuration
+- Ensure `OLLAMA_MODEL` points to a vision model (e.g., `llava`) for best results, or user can override with `VISUAL_RUNTIME`.
+
+## Verification Plan
+
+### Automated Tests
+- **Test**: `tests/test_analyze_vision.py`
+    - Verify `generate` accepts `image_path`.
+    - Mock Ollama response to verify image is passed in parameters.
+
+### Manual Verification
+1.  **Vision Check**:
+    - Run the verification script.
+    - Check logs/output to ensure the model mentions visual details (e.g., "The red object in the image...").

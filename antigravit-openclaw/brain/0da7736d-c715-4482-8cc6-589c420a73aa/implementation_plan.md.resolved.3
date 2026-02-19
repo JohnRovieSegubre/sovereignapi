@@ -1,0 +1,111 @@
+# Implementation Plan - Comic/Manga Panel Animation System
+
+## Goal Description
+Create a deterministic system to animate "in-between" motion for two comic/manga panels showing the same character.
+**MVP Scope**: reliably animate simple pose changes (arms, head, slight torso rotation) with preserved identity.
+**Out of Scope**: full-body flips, heavy foreshortening, multi-character scenes, complex background changes.
+
+## Acceptance Criteria (MVP)
+- **Start-frame SSIM**: ≥ 0.88 (relative to cropped start image)
+- **End-frame SSIM**: ≥ 0.88 (relative to cropped end image)
+- **Character Identity**: CLIP cosine similarity ≥ 0.80
+- **Visual**: No heavy flicker, readable motion.
+- **Human Review**: ≥ 80% pass rate ("same character", "plausible motion").
+- **Determinism**: Identical output for same inputs + seed.
+
+## Hardware & Environment
+- **Dev/Light**: NVIDIA 8-12GB (RTX 3060/3070) for SAM (vit_b) + MediaPipe.
+- **High Quality**: NVIDIA 16-24GB+ (RTX 3090/4090) for SAM (vit_h) and Diffusion refinement.
+
+## Architecture & Modules
+
+### [src/config.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/config.py)
+Centralized configuration for hyperparameters (FPS, resolution, seeds, easing curves, mask strategies).
+
+### `src/pipeline/`
+- **[preprocessing.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/tests/test_preprocessing.py)**:
+    - Idempotent normalization to fixed workspace (e.g., 1024x1024).
+    - Save transform metadata (scale, offset) for accurate recompositing.
+    - Support for auto-detecting panels and manual crops.
+- **[segmentation.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/pipeline/segmentation.py)** (Masking):
+    - Wrapper for SAM with multiple strategies: `largest_area`, `center_overlap`, `union`.
+    - Fallbacks: Simple thresholding if SAM fails.
+    - Morphological operations (dilate/erode) for stability.
+- **[keypoints.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/tests/test_keypoints.py)** (Pose):
+    - Wrapper for MediaPipe with fallback to OpenPose (conceptually) or manual correction.
+    - Normalize keypoints to image space.
+    - Infer missing joints if possible.
+- **[motion_planner.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/pipeline/motion_planner.py)** (Interpolation):
+    - Schemes: Linear, Cubic Hermite, Ease-in-out.
+    - Constraints: Pinning joints (e.g., torso).
+    - Output: Sequence of intermediate skeletons.
+- **[warping.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/pipeline/warping.py)** (Generation):
+    - Robust Delaunay triangulation (anchors at corners).
+    - Barycentric mapping for pixel warping.
+    - Hole filling (inpaint).
+    - Fallback: Detect severe distortion -> trigger diffusion generation (future).
+- **[rendering.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/pipeline/rendering.py)** (Composite):
+    - FFmpeg export (MP4/WebM).
+    - Options: Hard vs Feathered composite.
+    - Temporal smoothing (blending).
+
+### `src/utils/`
+- **[visualization.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/utils/visualization.py)**: Visual diffs, skeleton overlays, side-by-side debug views.
+- **[io.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/utils/io.py)**: Robust path handling, atomic writes, `run_manifest.json` (metadata).
+
+### [tests/](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/tests/test_all.py#17-72) & `scripts/`
+- Unit/Integration tests for pipeline components.
+- One-liner demo scripts in `scripts/`.
+
+## Failure Modes & Recovery
+- **MediaPipe Failure**: Fallback to manual entry or heuristic.
+- **SAM Failure**: Fallback to thresholding or manual mask.
+- **Warp Distortion**: Detect via metric, flag for diffusion/manual fix.
+
+## Verification Plan
+
+### Automated Verification
+- **Unit Tests**: Interpolation math, coordinate transforms, I/O safety.
+- **Integration**: Full run on "stick figure" synthetic data.
+- **Determinism**: Verify identical output for same seed.
+- **Resource Check**: Monitor VRAM usage.
+
+### Manual Verification
+- **Visual Inspection**: Flicker, limb integrity, face preservation.
+- **Metrics Dashboard**: Review SSIM/CLIP scores per run.
+
+## Phase 6: Sustainability & Research (Upcoming)
+
+### Anime-Specific Pose Models
+General-purpose AI like MediaPipe often fails on highly stylized manga. We propose integrating more robust models:
+- **MMPose (Danbooru-tuned)**: Leveraging models specifically trained on secondary (illustrated) characters.
+- **Anime Detection Model**: Switching from standard Pose detection to specialized landmarkers that understand "anime anatomy" (e.g., absence of certain landmarks, exaggerated proportions).
+
+### Manual Correction Logic
+To ensure 100% reliability, we will implement a "User-in-the-loop" JSON format.
+- If AI detection fails, the user can provide a `corrections.json` file with normalized coordinates for key joints.
+- The pipeline will prioritize manual joints over AI-detected ones.
+
+## Phase 8: Mesh Warping Refinement (Active)
+
+### Goal: Eliminate Temporal Jitter ("Popping")
+The primary cause of animation flicker in warping pipelines is **Topology Flipping**: when triangulation changes between frames due to vertex motion.
+
+### Strategy 1: Canonical Topology Locking
+- **Concept**: Compute Delaunay triangulation *once* on the Start Frame (Canonical Pose).
+- **Execution**: Apply this exact connectivity list (`simplices`) to all subsequent frames.
+- **Benefit**: Ensures temporal coherence; connections stretch but never flip.
+
+### Strategy 2: Barycentric Coordinate Caching
+- **Problem**: Affine warping of triangles can leave 1px gaps (seams) due to rounding errors.
+- **Solution**: 
+    1. For each pixel in the *Start Frame*, identify which Triangle `T` it belongs to.
+    2. Compute and cache its Barycentric Weights [(u, v, w)](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/main.py#31-180) relative to `T`.
+    3. For Frame `N`, reconstruction is purely a vector dot product: `Pixel_N = u*A_N + v*B_N + w*C_N`.
+- **Implementation**: Vectorized numpy operation (or Numba for speed).
+
+### Strategy 3: Geometry Hardening
+- **Problem**: Thin, "sliver" triangles cause severe texture distortion.
+- **Refinement**: 
+    - Detecting collinear points: If 3 points form an angle < 5°, merge or offset them.
+    - Adding Steiner Points: Insert helper vertices in large whitespace areas to encourage uniform triangulation.

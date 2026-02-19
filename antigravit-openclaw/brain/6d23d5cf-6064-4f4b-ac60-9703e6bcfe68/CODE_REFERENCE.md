@@ -1,0 +1,194 @@
+# CODE REFERENCE FOR NOTEBOOKLM
+
+## 1. STRATEGY CONFIGURATIONS (from `strategy_ab_tester.py`)
+This dictionary defines the 26 different strategies currently being A/B tested.
+
+```python
+STRATEGY_CONFIGS = {
+    # Tier 1: Strategy Isolation (8 configs)
+    "baseline": {
+        "description": "No amplification strategies (control)",
+        "strategies": {
+            "momentum": False,
+            "price_velocity": False,
+            "binance_ofi": False,
+            "polymarket_ofi": False,
+            "volume_profile": False,
+            "obv_divergence": False,
+            "vol_regime": False,
+            "vol_percentile": False,
+        },
+        "params": {}
+    },
+    "velocity_only": {
+        "description": "Price Velocity only",
+        "strategies": {
+            "momentum": False,
+            "price_velocity": True,
+            "binance_ofi": False,
+        },
+        "params": {}
+    },
+    "binance_ofi_only": {
+        "description": "Binance OFI only",
+        "strategies": {
+            "momentum": False,
+            "price_velocity": False,
+            "binance_ofi": True,
+        },
+        "params": {}
+    },
+    # ... (other variations) ...
+    
+    # Tier 2: Power Combos (3 configs)
+    "scalper_combo": {
+        "description": "Velocity + OFI (Speed Demon)",
+        "strategies": {
+            "momentum": False,
+            "price_velocity": True,
+            "binance_ofi": True,
+        },
+        "params": {
+            "BUY_ENTRY_EDGE": 0.005,
+            "MAX_ENTRY_EDGE": 0.035,
+            "TAKE_PROFIT_1": 8.0,
+        }
+    },
+    "trend_combo": {
+        "description": "Momentum + Vol Regime (Trend Follower)",
+        "strategies": {
+            "momentum": True,
+            "vol_regime": True,
+            "binance_ofi": False,
+        },
+        "params": {
+            "BUY_ENTRY_EDGE": 0.015,
+        }
+    },
+    "smart_money_combo": {
+        "description": "Binance OFI + Volume Profile (Whale Watcher)",
+        "strategies": {
+            "binance_ofi": True,
+            "volume_profile": True,
+        },
+        "params": {}
+    }
+}
+```
+
+## 2. AMPLIFICATION LOGIC (from `amplification_strategies.py`)
+This function combines all individual signals into a final specific "amplification" multiplier for Fair Value.
+
+```python
+def calculate_combined_amplification(
+    df: pd.DataFrame,
+    current_price: float,
+    current_volatility: float,
+    historical_volatility: float,
+    fair_value_up: float = 0.5,
+    fair_value_down: float = 0.5,
+    order_book: Optional[Dict] = None,
+    atr_metrics: Optional[Dict] = None,
+    df_1h: Optional[pd.DataFrame] = None
+) -> Dict:
+    """
+    Combine all amplification strategies.
+    When 2+ strategies trigger, ADD all amplifications to base fair value.
+    """
+    # ... (initialization) ...
+
+    # Strategy 1: Momentum
+    momentum = calculate_momentum_amplification(df, current_price, indicators=indicators)
+    
+    # Strategy 7: Price Velocity
+    price_velocity = calculate_price_velocity_amplification(df, fair_value_up, fair_value_down, indicators=indicators)
+    
+    # Strategy 4: Order Flow Imbalance (OFI)
+    if order_book and use_orderbook:
+        orderbook = calculate_orderbook_imbalance_amplification(order_book)
+
+    # Strategy X: Binance OFI
+    if getattr(Config, 'ENABLE_BINANCE_OFI_REPORTING', True):
+        binance_ofi = fetch_binance_ofi_for_symbol('BTCUSDT', ...)
+
+    # ADDITIVE COMBINATION
+    amp_up = 1.0
+    amp_down = 1.0
+    
+    # Add momentum bonuses
+    amp_up += (momentum['amp_up'] - 1.0)
+    amp_down += (momentum['amp_down'] - 1.0)
+    
+    # Add price velocity bonuses
+    amp_up += (price_velocity['amp_up'] - 1.0)
+    amp_down += (price_velocity['amp_down'] - 1.0)
+    
+    # Add Binance OFI bonuses (if enabled)
+    if use_binance_apply and binance_ofi.get('active', False):
+        amp_up += (binance_ofi.get('amp_up', 1.0) - 1.0)
+        amp_down += (binance_ofi.get('amp_down', 1.0) - 1.0)
+
+    # Multiply by Volume Profile & Vol Percentile (Regime Filters)
+    amp_up *= volume_profile['amp_up']
+    amp_up *= vol_percentile['amp_up']
+    
+    # Global Caps
+    amp_up = max(GLOBAL_AMP_FLOOR, min(amp_up, GLOBAL_AMP_CAP))
+    amp_down = max(GLOBAL_AMP_FLOOR, min(amp_down, GLOBAL_AMP_CAP))
+
+    return {
+        'amp_up': amp_up,
+        'amp_down': amp_down,
+        'active_strategies': active_strategies,
+        'strategy_details': { ... }
+    }
+```
+
+## 3. EXECUTION LOGIC (from `main_bot_optimized.py`)
+The bot decides to buy when `Fair Value (amplified) > Market Ask Price + Edge`.
+
+```python
+# Inside the trading loop:
+fv_use_up = fv_up_amp if Config.USE_AMPLIFIED_FOR_ENTRY else base_fv_up
+
+# Decision: Is there an edge?
+if prices_up['best_ask'] and fv_use_up > prices_up['best_ask']:
+    # Calculate edge
+    up_edge = fv_use_up - prices_up['best_ask']
+    
+    # VETO CHECK 1: Order Flow Imbalance
+    if ofi_imbalance > 60:
+        print("VETO: Massive buy pressure, don't chase!")
+        veto_triggered = True
+
+    # VETO CHECK 2: Velocity (Don't FOMO into a pump near expiry)
+    if market_info['minutes_until_end'] <= 15 and velocity_pct > 3.0:
+        print("VETO: Price pumping >3%, don't FOMO!")
+        veto_triggered = True
+
+    if not veto_triggered:
+        # EXECUTE TRADE
+        self.execution_engine.execute_trade(
+            token_id=token_id_up,
+            action='BUY',
+            price=prices_up['best_ask']
+        )
+```
+
+## 4. BOT CONFIGURATION (from `config.py`)
+Key parameters controlling behavior.
+
+```python
+class Config:
+    # Trading Parameters
+    TRADE_SIZE = 5.0  # USDC per trade
+    MAX_POS_SIZE = 50.0 # Max per side
+    
+    # Edge Requirements
+    BUY_ENTRY_EDGE = 0.01   # Minimum 1 cent edge
+    MAX_ENTRY_EDGE = 0.08   # Don't buy if edge is suspicious
+    
+    # A/B Testing Defaults
+    AB_TEST_ENABLED = True
+    AB_TEST_SUMMARY_INTERVAL_MINUTES = 30
+```

@@ -1,0 +1,79 @@
+# x402 Protocol Integration Plan
+> **Objective:** Add "Instant Pay" (x402) support alongside "Prepay" (Macaroon/Polygon) to create a Hybrid Payment Model.
+
+## Architecture: Hybrid Payment Model
+
+| Mode | Protocol | User Type | Flow |
+|:---|:---|:---|:---|
+| **Member (Prepay)** | **Macaroon** + Polygon | Heavy / Predictable | Users deposit USDC → Mint Tokens → 24/7 Access (Zero friction) |
+| **Guest (Instant)** | **x402** (HTTP 402) | Sporadic / Agents | Agent hits API → Gets 402 → Pays instantly on Base → Access |
+
+---
+
+## User Review Required
+> [!IMPORTANT]
+> **Blockchain Selection:** x402 is optimized for **Base** (Coinbase L2) due to speed and cost. Our current logic uses **Polygon**.
+> - **We will keep Polygon for Prepay (Macaroons).**
+> - **We will add Base support for x402.**
+> This means the agent SDK will need to support signing transactions on *both* chains if they want to use both features.
+
+---
+
+## Proposed Changes
+
+### 1. Gateway Server (`gateway_server.py`)
+- **Action:** Add x402 Middleware logic.
+- **Logic:**
+    1. Check for `X-Sovereign-Api-Key` (Existing identity).
+    2. Check for `Authorization: Bearer <Macaroon>` (Existing prepay).
+    3. **NEW:** Check for `PAYMENT-SIGNATURE` header (x402).
+        - If present: 
+            - Call Facilitator `/verify` to validate payment.
+            - **Immediately call `/settle`** to capture funds.
+            - **NEW:** Add `PAYMENT-RESPONSE` header with receipt to the success response.
+        - If valid: Allow request.
+    4. **NEW:** If NO auth provided -> Return **HTTP 402**.
+        - Body: Empty.
+        - Header: `PAYMENT-REQUIRED: <base64-encoded-json>`
+        - JSON Payload:
+          ```json
+          {
+            "x402Version": "2.0",
+            "accepts": [
+              { "scheme": "exact", "network": "base-mainnet", "price": "0.01", "asset": "0x..." },
+              { "scheme": "exact", "network": "polygon", "price": "0.01", "asset": "0x..." }
+            ]
+          }
+          ```
+
+### 2. SDK Client (`sdk/sovereign.py`)
+- **Action:** Add "Instant Pay" capability.
+- **Logic:**
+    - If API returns 402:
+        - Read `PAYMENT-REQUIRED` header.
+        - Decode Base64.
+        - Parse `"accepts"` array.
+        - Select network (Base).
+        - Sign transaction.
+        - Retry request with `PAYMENT-SIGNATURE` header.
+
+### 3. Configuration (`.env`)
+- **New Vars:**
+    - `ENABLE_X402=true`
+    - `X402_WALLET_ADDRESS`
+    - `X402_FACILITATOR_URL=https://api.cdp.coinbase.com/platform/v2/x402`
+    - `X402_CDP_API_KEY` (Optional)
+
+
+---
+
+## Verification Plan
+
+### Automated Test
+- Create `tests/test_x402_flow.py` (Mocked).
+- Simulate 402 response.
+- Simulate Client payment signature generation.
+- Verify Gateway accepts valid signature.
+
+### Manual Verification
+- Use the `x402` debugger or a compliant agent to hit the endpoint and verify the 402 response format.

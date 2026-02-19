@@ -1,0 +1,91 @@
+# Wallet Client Comparison
+
+## Overview
+Both [wallet_client.py](file:///c:/Users/rovie%20segubre/agent/wallet_client.py) and [smart_wallet.py](file:///c:/Users/rovie%20segubre/agent/smart_wallet.py) implement automatic token rotation, but they serve different purposes in your architecture.
+
+---
+
+## Side-by-Side Comparison
+
+| Feature | [wallet_client.py](file:///c:/Users/rovie%20segubre/agent/wallet_client.py) | [smart_wallet.py](file:///c:/Users/rovie%20segubre/agent/smart_wallet.py) |
+|---------|-------------------|------------------|
+| **Purpose** | **API Client Library** | **End-User Chat Interface** |
+| **Storage Format** | JSON (`wallet.json`) | Plain Text (`current_token.txt`) |
+| **Storage Path** | [.agent/data/wallet.json](file:///c:/Users/rovie%20segubre/agent/.agent/data/wallet.json) | [.agent/wallet/current_token.txt](file:///c:/Users/rovie%20segubre/agent/.agent/wallet/current_token.txt) |
+| **Interface** | Class-based ([SovereignWallet](file:///c:/Users/rovie%20segubre/agent/wallet_client.py#11-86)) | Function-based |
+| **Default Behavior** | Single request (CLI args) | Interactive loop |
+| **Use Case** | Import into other scripts | Direct human interaction |
+| **Output Style** | Clean, structured | Conversational with emoji |
+
+---
+
+## Code Architecture
+
+### [wallet_client.py](file:///c:/Users/rovie%20segubre/agent/wallet_client.py) - Library Approach
+```python
+from wallet_client import SovereignWallet
+
+wallet = SovereignWallet("my_bot_wallet.json")
+response = wallet.request_compute("sovereign-r1", "Hello")
+print(response)
+```
+
+**Best for:**
+- Building other AI agents
+- Programmatic access
+- Multiple wallet files
+- Import as a module
+
+---
+
+### [smart_wallet.py](file:///c:/Users/rovie%20segubre/agent/smart_wallet.py) - Application Approach
+```bash
+python smart_wallet.py
+> Hello
+> What is 2+2?
+> exit
+```
+
+**Best for:**
+- Direct human testing
+- Quick conversations
+- Single persistent wallet
+- Standalone executable
+
+---
+
+## Test Results
+
+### [wallet_client.py](file:///c:/Users/rovie%20segubre/agent/wallet_client.py) Test
+```
+[Wallet] Requesting sovereign-r1...
+[Wallet] Using stored Bearer Token.
+✅ Success! Response received.
+💰 Received Change Token. Saving to wallet.json...
+
+--- AI RESPONSE ---
+Jupiter is the largest planet...
+------------------
+```
+
+### [smart_wallet.py](file:///c:/Users/rovie%20segubre/agent/smart_wallet.py) Test
+```
+🧠 Sovereign Agent Interface
+--------------------------------------------
+
+📤 [WALLET] Spending Token: MDA0NW...
+✅ [SUCCESS] Thought received in 14.59s
+💾 [WALLET] Token rotated.
+
+🤖 [BRAIN]: That's 4!
+```
+
+---
+
+## Recommendation
+
+**Keep Both:**
+- Use [wallet_client.py](file:///c:/Users/rovie%20segubre/agent/wallet_client.py) as your **infrastructure layer** (for building agents)
+- Use [smart_wallet.py](file:///c:/Users/rovie%20segubre/agent/smart_wallet.py) as your **user interface** (for manual testing)
+
+This separation follows the Unix philosophy: build composable tools that do one thing well.

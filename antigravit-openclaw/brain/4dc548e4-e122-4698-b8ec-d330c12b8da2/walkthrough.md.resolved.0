@@ -1,0 +1,33 @@
+# Improved Typography & Overlays
+
+## Changes Implemented
+We have upgraded the shorts rendering pipeline to use **Pillow (Python Imaging Library)** instead of raw FFmpeg `drawtext`.
+
+### 1. New Text Engine: [TextOverlayGenerator](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/text_renderer.py#6-135)
+- **File**: [src/clipper/processing/text_renderer.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/text_renderer.py)
+- **Capabilities**:
+    - Generates high-quality transparent PNG overlays.
+    - Uses TrueType fonts (e.g., Arial, Segoe UI) instead of basic FFmpeg fonts.
+    - Implements text wrapping.
+    - Draws rounded rectangle backgrounds ("Chat Bubble" style).
+    - Supports custom background colors per "Persona".
+
+### 2. Refactored Rendering: [shorts_render.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py)
+- Replaced the `drawtext` complex filter with a simpler [overlay](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py#30-34) filter.
+- Input: Now takes the generated `.png` from the generator and composites it over the background.
+
+## Verification
+### Manual Test
+- **Script**: [tests/test_render_manual.py](file:///c:/Users/rovie%20segubre/clipper/tests/test_render_manual.py)
+- **Process**:
+    1.  Used [videoplayback.1769409807272.publer.com.mp4](file:///c:/Users/rovie%20segubre/clipper/videoplayback.1769409807272.publer.com.mp4) as the source.
+    2.  Mocked 3 personas (ChatGPT, Claude, Grok).
+    3.  Generated TTS and Text Overlays.
+    4.  Rendered to [output/test_pillow_render.mp4](file:///c:/Users/rovie%20segubre/clipper/output/test_pillow_render.mp4).
+- **Result**: Success.
+    - Output File: [output/test_pillow_render.mp4](file:///c:/Users/rovie%20segubre/clipper/output/test_pillow_render.mp4) (~1.2 MB).
+    - Logs confirmed generation of `persona_0.png`, `persona_1.png` etc.
+
+## Next Steps
+- **Font Customization**: We currently try to load system fonts like `arial.ttf`. You can add a `fonts/` directory to usage specific `.ttf` files for better branding.
+- **Styling**: [TextOverlayGenerator](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/text_renderer.py#6-135) handles the look. You can tweak `radius`, `padding`, or `shadows` there.

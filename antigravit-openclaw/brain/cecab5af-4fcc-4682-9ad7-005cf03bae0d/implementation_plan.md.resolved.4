@@ -1,0 +1,54 @@
+# Improve Riddle Segmentation & Display (CLIP/CoCa Vision)
+
+The goal is to modernize the dormant [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py) logic, implement a "Multi-LLM Debate" visual style, and add **visual awareness** using `open-clip-torch`.
+
+## User Review Required
+
+> [!NOTE]
+> **Vision Stack**: We will use **OpenCLIP (CoCa)**.
+> Standard CLIP is a classifier (it scores text against images). To *generate* descriptions (so the personas can "see"), we will use a **CoCa (Contrastive Captioner)** model supported by the `open-clip-torch` library.
+>
+> **Workflow**:
+> 1.  **Vision**: CoCa sees the video frame -> Generates text: *"A person holding a red apple."*
+> 2.  **Cognition**: Text LLM (Personas) reads the riddle + the description -> Generates answers.
+
+## Proposed Changes
+
+### Dependencies
+- Add `open-clip-torch`, `torch`, `torchvision`, `pillow` to [requirements.txt](file:///c:/Users/rovie%20segubre/clipper/requirements.txt).
+
+### Core Utilities
+#### [MODIFY] [ffmpeg_utils.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/ffmpeg_utils.py)
+- **New Function**: `extract_frame(video_path, timestamp, output_path)`
+
+### AI & Logic (`src/clipper/processing`)
+
+#### [MODIFY] [analyze.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py)
+- **New Analyzer**: `ImageDescriber` class (wraps OpenCLIP/CoCa).
+    - Method: `describe(image_path) -> str`.
+    - Loads `coca_ViT-L-14` (or similar available model) on first use.
+- **Integration**: Update `AnalyzerFactory` or `BaseAnalyzer` to expose `describe_image`.
+
+#### [MODIFY] [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py)
+- **Logic**:
+    1.  Extract Frame.
+    2.  Get Description: `desc = image_describer.describe(frame)`.
+    3.  Prompt LLM: `Riddle: "..."\nVisual Context: "{desc}"\nGenerate 3 answers...`
+
+#### [MODIFY] [shorts_render.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py)
+- No changes needed (rendering handles text output).
+
+### Configuration
+- Add `CLIP_MODEL` config (default: `coca_ViT-L-14`) and `pretrained` weights config.
+
+## Verification Plan
+
+### Automated Tests
+- **Test**: `tests/test_clip_vision.py`
+    - Verify `ImageDescriber` loads model and runs inference on a dummy image.
+
+### Manual Verification
+1.  **Vision Check**:
+    - Run `verify_riddle.py`.
+    - Inspect logs to see the generated caption (e.g., "Found caption: 'a cat'").
+    - Verify persona answers incorporate this detail.

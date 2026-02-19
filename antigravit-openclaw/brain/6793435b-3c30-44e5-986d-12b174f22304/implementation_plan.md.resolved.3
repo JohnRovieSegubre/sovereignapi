@@ -1,0 +1,63 @@
+# x402 Protocol Integration Plan
+> **Objective:** Add "Instant Pay" (x402) support alongside "Prepay" (Macaroon/Polygon) to create a Hybrid Payment Model.
+
+## Architecture: Hybrid Payment Model
+
+| Mode | Protocol | User Type | Flow |
+|:---|:---|:---|:---|
+| **Member (Prepay)** | **Macaroon** + Polygon | Heavy / Predictable | Users deposit USDC → Mint Tokens → 24/7 Access (Zero friction) |
+| **Guest (Instant)** | **x402** (HTTP 402) | Sporadic / Agents | Agent hits API → Gets 402 → Pays instantly on Base → Access |
+
+---
+
+## User Review Required
+> [!IMPORTANT]
+> **Blockchain Selection:** x402 is optimized for **Base** (Coinbase L2) due to speed and cost. Our current logic uses **Polygon**.
+> - **We will keep Polygon for Prepay (Macaroons).**
+> - **We will add Base support for x402.**
+> This means the agent SDK will need to support signing transactions on *both* chains if they want to use both features.
+
+---
+
+## Proposed Changes
+
+### 1. Gateway Server ([gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py))
+- **Action:** Add x402 Middleware logic.
+- **Logic:**
+    1. Check for `X-Sovereign-Api-Key` (Existing identity).
+    2. Check for `Authorization: Bearer <Macaroon>` (Existing prepay).
+    3. **NEW:** Check for `Payment-Signature` header (x402).
+        - If present: Call x402 Facilitator (`https://x402.org/facilitator/verify`) to validate payment.
+        - If valid: Allow request.
+    4. **NEW:** If NO auth provided -> Return **HTTP 402** with x402 compliant JSON body.
+        - `{"error": "Payment Required", "schemes": [{"network": "base", "price": "0.01 USDC", ...}]}`
+
+### 2. SDK Client ([sdk/sovereign.py](file:///c:/Users/rovie%20segubre/agent/sdk/sovereign.py))
+- **Action:** Add "Instant Pay" capability.
+- **Logic:**
+    - If API returns 402:
+        - Check if it's a legacy L402 (Lightning) or **modern x402 (EVM)**.
+        - If x402:
+            1. Parse price and destination address.
+            2. Switch wallet signer to **Base** network.
+            3. Sign USDC transfer.
+            4. Retry request with `Payment-Signature` header.
+
+### 3. Configuration (`.env`)
+- **New Vars:**
+    - `ENABLE_X402=true`
+    - `X402_WALLET_ADDRESS` (Can be same as `MY_WALLET_ADDRESS`, but user might want separate)
+    - `X402_NETWORK` (Default: `base-mainnet` or `base-sepolia`)
+
+---
+
+## Verification Plan
+
+### Automated Test
+- Create `tests/test_x402_flow.py` (Mocked).
+- Simulate 402 response.
+- Simulate Client payment signature generation.
+- Verify Gateway accepts valid signature.
+
+### Manual Verification
+- Use the `x402` debugger or a compliant agent to hit the endpoint and verify the 402 response format.

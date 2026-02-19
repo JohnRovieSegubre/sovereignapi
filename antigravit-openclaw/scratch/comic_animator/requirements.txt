@@ -1,0 +1,10 @@
+opencv-python>=4.8.0
+numpy>=1.24.0
+mediapipe>=0.10.0
+segment-anything
+scikit-image>=0.21.0
+torch>=2.0.0
+torchvision>=0.15.0
+tqdm
+pillow
+requests

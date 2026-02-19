@@ -1,0 +1,10 @@
+\fastapi
+uvicorn
+httpx
+pymacaroons
+requests
+web3
+python-dotenv
+eth_account
+markdown
+6 *cascade086E*cascade08ER*cascade08R\*cascade08"(d4e7a325d0144b3814ef864593774f7a3951320627file:///c:/Users/rovie%20segubre/agent/requirements.txt:&file:///c:/Users/rovie%20segubre/agent

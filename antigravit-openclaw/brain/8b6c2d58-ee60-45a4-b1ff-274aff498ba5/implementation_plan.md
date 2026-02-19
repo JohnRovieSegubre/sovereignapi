@@ -1,0 +1,260 @@
+# Comprehensive A/B Testing Plan
+
+## Current Configuration Analysis
+
+After reviewing `config.py` and `amplification_strategies.py`, here's the complete breakdown of what we can test.
+
+> [!IMPORTANT]
+> **Status: COMPLETED**
+> This plan has been fully implemented. The A/B Testing Framework is now live and can test ALL 26 configurations simultaneously.
+
+
+---
+
+## Part 1: Strategy Isolation Tests
+
+Test each strategy independently to find which ones contribute alpha.
+
+### Current 8 Strategies
+
+| # | Strategy | Current Config | Cap | Notes |
+|---|----------|---------------|-----|-------|
+| 1 | **Momentum** | Enabled | 1.12 (+12%) | MACD + Stochastic + ROC |
+| 2 | **Price Velocity** | Enabled | 1.08 (+8%) | Speed + acceleration |
+| 3 | **Binance OFI** | Enabled (APPLY=true) | No hard cap | BTC order book imbalance |
+| 4 | **Polymarket OFI** | **Disabled** | 1.08 (+8%) | Polymarket book imbalance |
+| 5 | **Volume Profile** | Enabled | 1.08 (+8%) | Volume conviction |
+| 6 | **OBV Divergence** | Enabled | 1.06 (+6%) | Fakeout detector |
+| 7 | **Vol Regime** | **Report only** | 1.12 (+12%) | ATR-based, not applied |
+| 8 | **Vol Percentile** | **Disabled** | 1.10 (+10%) | Regime filter |
+
+---
+
+## Part 2: Entry/Exit Parameter Variations
+
+### Entry Parameters (Current vs Suggested Tests)
+
+| Parameter | Current | Conservative | Aggressive | Notes |
+|-----------|---------|--------------|------------|-------|
+| `BUY_ENTRY_EDGE` | 0.0075 (0.75%) | **0.01 (1%)** | 0.005 (0.5%) | Min edge to enter |
+| `MAX_ENTRY_EDGE` | 0.015 (1.5%) | **0.012 (1.2%)** | 0.02 (2%) | Max edge (avoid bad fills) |
+| `ENTRY_AMP_THRESHOLD` | 1.05 (+5%) | **1.08 (+8%)** | 1.03 (+3%) | Min amp required |
+| `ENTRY_AMP_ACTIVE_EPS` | 0.01 | 0.02 | 0.005 | Minimum "active" amp |
+| `AMP_FINAL_MULTIPLIER` | 1.0 | **0.5** | 1.5 | Amplification boost |
+
+### Exit Parameters (Current vs Suggested Tests)
+
+| Parameter | Current | Conservative | Aggressive |
+|-----------|---------|--------------|------------|
+| `STOP_LOSS_PCT` | -30% | **-20%** | -40% |
+| `TAKE_PROFIT_1` | 10% | **15%** | 8% |
+| `TAKE_PROFIT_2` | 15% | 20% | 12% |
+| `TAKE_PROFIT_3` | 20% | **25%** | 15% |
+| `TRAILING_STOP_ACTIVATION` | 10% | 15% | 8% |
+| `TRAILING_STOP_DISTANCE` | 5% | 7% | 3% |
+
+### Binance OFI Tuning
+
+| Parameter | Current | Less Sensitive | More Sensitive |
+|-----------|---------|----------------|----------------|
+| `BINANCE_OFI_IMBALANCE_THRESHOLD_PCT` | 15% | **20%** | 10% |
+| `BINANCE_OFI_BONUS_LOG_K` | 0.02 | 0.015 | 0.025 |
+| `BINANCE_OFI_MAX_DISTANCE_USD` | $50 | $30 | $75 |
+
+---
+
+## Part 3: Recommended A/B Test Configurations
+
+### Tier 1: Strategy Isolation (8 tests)
+
+```
+Config A: baseline (no strategies) - CONTROL
+Config B: momentum_only
+Config C: velocity_only
+Config D: binance_ofi_only
+Config E: volume_profile_only
+Config F: obv_only
+Config G: all_enabled (current production)
+Config H: polymarket_ofi_only (currently disabled, test it!)
+```
+
+### Tier 2: Strategy Combinations (6 tests)
+
+Based on my analysis, these are promising combinations:
+
+```
+Config I:  momentum + obv (both are trend-following)
+Config J:  velocity + binance_ofi (fast momentum + order flow)
+Config K:  momentum + velocity + binance_ofi (top 3 likely performers)
+Config L:  binance_ofi + obv (order flow + fakeout detection)
+Config M:  volume_profile + velocity (conviction + speed)
+Config N:  all EXCEPT binance_ofi (test if it hurts)
+```
+
+### Tier 3: Entry Parameter Tuning (5 tests)
+
+```
+Config O:  Conservative entries (higher thresholds)
+           - BUY_ENTRY_EDGE=0.01
+           - ENTRY_AMP_THRESHOLD=1.08
+           - AMP_FINAL_MULTIPLIER=0.5
+
+Config P:  Aggressive entries (lower thresholds)
+           - BUY_ENTRY_EDGE=0.005
+           - ENTRY_AMP_THRESHOLD=1.03
+           - AMP_FINAL_MULTIPLIER=1.5
+
+Config Q:  Tight max edge (avoid bad fills)
+           - MAX_ENTRY_EDGE=0.012
+           - MAX_ENTRY_EDGE_AMP_CAP=0.02
+
+Config R:  Loose max edge (more opportunities)
+           - MAX_ENTRY_EDGE=0.02
+           - MAX_ENTRY_EDGE_AMP_CAP=0.035
+
+Config S:  Require stronger amp
+           - ENTRY_REQUIRE_ACTIVE_AMP=true
+           - ENTRY_AMP_ACTIVE_EPS=0.03
+```
+
+### Tier 4: Exit Parameter Tuning (4 tests)
+
+```
+Config T:  Quick profits (take profits earlier)
+           - TAKE_PROFIT_1=8
+           - TAKE_PROFIT_2=12
+           - TAKE_PROFIT_3=15
+
+Config U:  Let winners run (higher profit targets)
+           - TAKE_PROFIT_1=15
+           - TAKE_PROFIT_2=20
+           - TAKE_PROFIT_3=30
+
+Config V:  Tighter stops (cut losses faster)
+           - STOP_LOSS_PCT=-20
+           - TRAILING_STOP_DISTANCE=3
+
+Config W:  Wider stops (avoid shakeouts)
+           - STOP_LOSS_PCT=-40
+           - TRAILING_STOP_DISTANCE=8
+```
+
+### Tier 5: Binance OFI Sensitivity (3 tests)
+
+```
+Config X:  Less sensitive OFI
+           - BINANCE_OFI_IMBALANCE_THRESHOLD_PCT=20
+           - BINANCE_OFI_BONUS_LOG_K=0.015
+
+Config Y:  More sensitive OFI
+           - BINANCE_OFI_IMBALANCE_THRESHOLD_PCT=10
+           - BINANCE_OFI_BONUS_LOG_K=0.03
+
+Config Z:  Capped OFI (prevent over-amplification)
+           - BINANCE_OFI_USE_CAP=true
+           - AMP_CAP_ORDERBOOK=1.08
+```
+
+---
+
+## Total Test Matrix: 26 Configurations
+
+| Tier | Tests | Focus |
+|------|-------|-------|
+| 1 | 8 | Strategy isolation |
+| 2 | 6 | Strategy combinations |
+| 3 | 5 | Entry parameters |
+| 4 | 4 | Exit parameters |
+| 5 | 3 | Binance OFI tuning |
+| **Total** | **26** | |
+
+---
+
+## My Top Recommendations to Test First
+
+Based on my analysis, these are the **highest-impact configurations**:
+
+### Priority 1: Find the best strategies
+```
+A: baseline (control)
+B: momentum_only
+D: binance_ofi_only
+F: obv_only
+G: all_enabled (current)
+```
+
+### Priority 2: Find optimal entry settings
+```
+O: Conservative entries
+P: Aggressive entries
+```
+
+### Priority 3: Find optimal exit settings
+```
+T: Quick profits
+U: Let winners run
+```
+
+---
+
+## Documentation with NotebookLM
+
+### What is NotebookLM?
+
+NotebookLM is Google's AI-powered research assistant. It can:
+- Ingest documents (PDFs, text, logs)
+- Answer questions about your data
+- Generate summaries and insights
+- Help you find patterns
+
+### How to Use It for A/B Testing
+
+1. **Export test results to structured files:**
+   - `ab_test_results.json` - All hypothetical trades per strategy
+   - `ab_test_summary.csv` - P&L, trades, win rate per config
+   - `ab_test_trades.csv` - Individual trade log
+
+2. **Upload to NotebookLM:**
+   - Go to [notebooklm.google.com](https://notebooklm.google.com)
+   - Create new notebook
+   - Upload your result files
+
+3. **Ask questions like:**
+   - "Which strategy had the best Sharpe ratio?"
+   - "What was the average win rate for momentum-only?"
+   - "When did Binance OFI disagree with momentum?"
+   - "Generate a summary of the top 3 strategies"
+
+### Recommended Export Format
+
+I'll add CSV export alongside JSON for easy analysis:
+
+```csv
+timestamp,config,signal,side,entry_price,exit_price,pnl,pnl_pct,btc_price,amp_up,amp_down
+2026-01-28T01:30:00,momentum_only,BUY,UP,0.58,0.72,1.24,24.1,105234,1.082,0.965
+2026-01-28T01:35:00,momentum_only,SELL,UP,0.72,0.68,-0.35,-4.9,105189,0.985,1.012
+```
+
+This CSV can be:
+- Loaded into NotebookLM
+- Analyzed in Excel/Google Sheets
+- Imported to Python/Pandas for custom analysis
+
+---
+
+## Next Steps
+
+## Next Steps (COMPLETED)
+
+1. **[x] Confirm test priority** - Implemented ALL 26 tiers to run simultaneously.
+2. **[x] Confirm output format** - Implemented JSON + CSV for NotebookLM.
+3. **[x] Set test duration** - Configured for continuous run (recommended 24h).
+4. **[x] Implement the A/B tester module** - DELIVERED.
+
+## Verification & Usage
+
+The framework is verified and running.
+- **Run Script:** `run_ab_test.bat`
+- **Results:** `ab_test_results/`
+- **Analysis:** See `ab_testing_guide.md` for NotebookLM instructions.
+

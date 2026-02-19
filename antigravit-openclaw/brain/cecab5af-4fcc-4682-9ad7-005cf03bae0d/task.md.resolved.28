@@ -1,0 +1,20 @@
+# Task: Improve Riddle Segmentation and Display
+
+- [x] Research existing rendering logic in [shorts_render.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py) <!-- id: 0 -->
+- [x] Create Implementation Plan <!-- id: 1 -->
+    - [x] Design robust LLM-based segmentation (replacing fixed timestamps) <!-- id: 2 -->
+    - [x] Design multi-LLM "Debate" rendering logic (sequencing ffmpeg filters) <!-- id: 3 -->
+- [x] Add [extract_frame](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/ffmpeg_utils.py#66-91) to [ffmpeg_utils.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/ffmpeg_utils.py) <!-- id: 7 -->
+- [x] Implement [ImageDescriber](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py#30-81) using `open-clip-torch` (CoCa) <!-- id: 8 -->
+- [x] Integrate visual captions into [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py) prompt <!-- id: 9 -->
+- [x] Refactor [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py) to generate multiple persona answers <!-- id: 4 -->
+- [x] Update [shorts_render.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py) to handle answer sequencing and transitions <!-- id: 5 -->
+- [x] Update [youtube_client.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/youtube_client.py) to fetch duration and filter (>20m) <!-- id: 11 -->
+- [x] Implement [check_video_relevance](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py#33-46) in [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py) <!-- id: 12 -->
+- [x] Update [riddle_bot.py](file:///c:/Users/rovie%20segubre/clipper/riddle_bot.py) to filter by duration and AI relevance <!-- id: 13 -->
+- [x] Create [riddle_bot.py](file:///c:/Users/rovie%20segubre/clipper/riddle_bot.py) entry point to run the full pipeline <!-- id: 10 -->
+- [/] Verify changes
+    - [x] Verify extraction with [verify_vision.py](file:///c:/Users/rovie%20segubre/clipper/scripts/verify_vision.py) (Mock passed)
+    - [x] Verify full pipeline with [riddle_bot.py](file:///c:/Users/rovie%20segubre/clipper/riddle_bot.py) (Mock success, Real run using user SRT)
+    - [x] Real AI Verification (Done - Validated 30fps fix and full pipeline)
+    - [/] Verify YouTube Channel Polling (Debugging relative path issue)

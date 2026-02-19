@@ -1,0 +1,57 @@
+# Walkthrough: The First Real Sale (L402 Verified)
+
+**Objective:** Prove that the Sovereign Node can sell intelligence to a "Stranger" (External Client) using real cryptographically verified payments.
+
+## 1. The Setup
+- **Server:** [gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py) running on Port 8000.
+- **Tunnel:** `ngrok` exposing the local port to `https://indecomposable-adelia-impolitely.ngrok-free.dev`.
+- **Payment Layer:** Alby API (Real Settlement Verification).
+
+## 2. The Transaction Flow (Manual Verification)
+
+### Phase A: The Challenge
+The client (Stranger) requests a completion using `curl`:
+```bash
+curl -i -X POST https://indecomposable-adelia-impolitely.ngrok-free.dev/v1/chat/completions ...
+```
+**Result:** Server returns `402 Payment Required` with a 10-satoshi Lightning Invoice.
+
+### Phase B: The Settlement
+The client pays the invoice using a mobile wallet (e.g., Alby). Upon payment, the client receives the **Preimage** (the secret key).
+
+### Phase C: The Delivery
+The client resends the request with the `Authorization: L402 <PREIMAGE>:signature` header.
+
+**Gateway Logic:**
+1. Hashed the Preimage (SHA256).
+2. Checked Alby API for the matching Payment Hash status.
+3. Verified "SETTLED".
+4. Forwarded request to OpenRouter (DeepSeek-R1).
+
+## 3. Evidence of Success
+```json
+{
+  "id": "gen-1770540296-q87OtgRfnfC6FvZBbhln",
+  "provider": "Novita",
+  "model": "deepseek/deepseek-r1",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Hello! 👋 It's wonderful to connect with you... I'm all yours. 🌟"
+      }
+    }
+  ],
+  "usage": {
+    "total_tokens": 400,
+    "cost": 0.0009856
+  }
+}
+```
+
+## 4. Conclusion
+The node is **fully operational**. It successfully processed a real financial intent, verified the payment cryptographically, and fulfilled the service.
+
+## 5. Next Steps
+- [ ] Post to **Moltbook** to list the service in the public registry.
+- [ ] Close the "Developer Backdoor" for production.

@@ -1,0 +1,20 @@
+# Improve Riddle Segmentation & Display (Duration Filtering)
+
+The goal is to prevent the bot from downloading massive compilation videos (e.g., 6GB+) by filtering out any video longer than **20 minutes**.
+
+## Proposed Changes
+
+### [MODIFY] [youtube_client.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/youtube_client.py)
+- **Metadata Fetch**: After getting the list of video IDs from `search().list`, make a batch call to [videos().list(id=..., part='contentDetails')](file:///c:/Users/rovie%20segubre/clipper/src/clipper/youtube_client.py#48-85).
+- **Parsing**: Parse the ISO 8601 duration (e.g., `PT1H5M`) into seconds.
+- **Filtering**: Drop any video > 1200 seconds.
+- **Keyword Search**: Update [get_channel_videos](file:///c:/Users/rovie%20segubre/clipper/src/clipper/youtube_client.py#48-85) to accept a `query` param (default "riddle") to search *within* the channel, rather than just `order="date"`.
+
+### [MODIFY] [riddle_bot.py](file:///c:/Users/rovie%20segubre/clipper/riddle_bot.py)
+- **Update Usage**: Pass `max_duration_seconds=1200` to [get_channel_videos](file:///c:/Users/rovie%20segubre/clipper/src/clipper/youtube_client.py#48-85) (or handle it inside the client).
+
+## Verification Plan
+
+### Manual Verification
+- Run [riddle_bot.py](file:///c:/Users/rovie%20segubre/clipper/riddle_bot.py).
+- Ensure it skips the 6GB video and picks a normal one.

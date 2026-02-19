@@ -1,0 +1,27 @@
+# Antigravity Extensibility Plan
+
+## Goal Description
+The user wants to know how to share skills. Since Skills are directory-based, "sharing" is equivalent to sharing the source code of the skill. I will demonstrate this by creating a sample skill and explaining its portability.
+
+## concepts
+
+### 1. Workflows
+- **What**: Automated sequences of steps.
+- **Where**: `.agent/workflows/`
+
+### 2. Skills & Sharing
+- **Structure**: A folder containing `SKILL.md` (and optional scripts/resources).
+- **Sharing**: To share a skill, you simply copy/distribute the skill folder.
+    - **Git**: Commit the folder to a repo.
+    - **Zip**: Archive the folder and send it.
+    - **Copy**: Move the folder to another project's `skills/` directory.
+
+## Proposed Demonstration
+I will create a "Greeter" skill to show how self-contained it is.
+
+### Files to Create
+- `[NEW] skills/greeter/SKILL.md`: The skill definition.
+- `[NEW] skills/greeter/scripts/greet.py`: A helper script for the skill.
+
+## Verification
+- User will see that `skills/greeter` is a self-contained unit that can be copied anywhere.

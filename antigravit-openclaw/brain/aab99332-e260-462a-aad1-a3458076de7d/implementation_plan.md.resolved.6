@@ -1,0 +1,24 @@
+# Meta-Agent Explanation Plan
+
+## Goal Description
+The user asks two deep questions:
+1.  **Manager Agents**: Can an agent manage others?
+2.  **Self-Creation**: Can an agent create new agents?
+
+I will answer "Yes" to both and explain the mechanisms in Antigravity. I also need to fix the verification of the previous compilation (the `.agent` folder copy seems to have issues).
+
+## Concepts
+
+### 1. Manager Agents (Orchestration)
+- **Concept**: An agent that breaks down a high-level goal and assigns sub-tasks to specialized agents/tools.
+- **Implementation**: The `orchestrator` agent (from the kit) and the `parallel-agents` skill are designed for this.
+- **Workflow**: `User -> Manager -> [Worker A, Worker B] -> Manager -> User`
+
+### 2. Agents Creating Agents (Recursive Improvement)
+- **Concept**: Since "Agents" are defined by files (Skills/Workflows), an agent (like me) can write those files.
+- **Implementation**: I can use `write_to_file` to create `skills/new-skill/SKILL.md`.
+- **Result**: I instantly gain the new capability.
+
+## Next Steps
+1.  **Debug Install**: Check why `.agent` isn't showing up.
+2.  **Demo**: Create a simple "Manager" workflow that coordinates two skills.

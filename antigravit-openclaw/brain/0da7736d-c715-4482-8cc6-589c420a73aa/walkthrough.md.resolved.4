@@ -1,0 +1,24 @@
+## Final Results (Success!)
+
+We have achieved a full end-to-end animation for your manga drawings. 
+
+### Breakthrough: Raw Detection Transformation
+We discovered that normalizing images *before* detection was confusing the AI. We implemented a **Raw-to-Norm Transformation** logic:
+1.  **Detect** on the high-res raw image (100% success).
+2.  **Transform** the points mathematically into the 1024x1024 animation workspace.
+3.  **Warp** with perfect alignment.
+
+### Sustainability Implementation
+- **Mask Caching**: The pipeline now saves masks to disk. If you want to change the animation duration or frame rate, it now takes **seconds** instead of minutes because it skips the SAM process.
+- **Fast/High Toggle**: You can switch between `vit_b` (fast) and `vit_h` (high quality) in [src/config.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/config.py).
+
+### Files Generated
+- **Final Result**:
+![Final Animation](/C:/Users/rovie segubre/.gemini/antigravity/brain/0da7736d-c715-4482-8cc6-589c420a73aa/manga_face_v2.gif)
+
+- **Verification Mesh**:
+![Final Face Detection](/C:/Users/rovie segubre/.gemini/antigravity/brain/0da7736d-c715-4482-8cc6-589c420a73aa/debug_start.png)
+*Verified landmarks on manga art translated to normalized space.*
+
+## How to Iterate
+If you want to try different images, simply run [main.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/main.py) again. If the detection ever fails on a very abstract sketch, you can now use the `output/landmarks_override.json` to manually specify points.

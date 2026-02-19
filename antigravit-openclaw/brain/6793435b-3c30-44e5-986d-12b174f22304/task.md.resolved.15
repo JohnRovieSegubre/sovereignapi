@@ -1,0 +1,51 @@
+# Sovereign Mint: Task List
+
+## Phase 1-5: Core Infrastructure (COMPLETE)
+- [x] Gateway Server with L402 + Macaroon Auth
+- [x] Token Rotation ("Catch the Change")
+- [x] Replay Attack Protection
+- [x] Mailbox Protocol (PENDING_CLAIMS)
+- [x] Polygon Watcher (Chainlink### Deployment
+- [x] Cloud deployment instructionscker, GCloud @ 34.55.175.24)
+
+---
+
+## Phase 6: Sovereign SDK (COMPLETE)
+- [x] SDK Core Library ([sdk/sovereign.py](file:///c:/Users/rovie%20segubre/agent/sdk/sovereign.py))
+- [x] Test Agent ([sdk/agent_customer.py](file:///c:/Users/rovie%20segubre/agent/sdk/agent_customer.py))
+
+---
+
+## Phase 7: Decoupled Identity + Fuel (COMPLETE)
+
+### Architecture
+- **API Key (License):** `sk-sov-{random32}` - Persistent identity
+- **Macaroon (Fuel):** Bearer token - Liquid, transferable credits
+
+### Server-Side Tasks
+- [x] **API Key Registry** ([api_key_registry.py](file:///c:/Users/rovie%20segubre/agent/api_key_registry.py))
+    - [x] JSON storage (`api_keys.json`)
+    - [x] CLI: Generate new keys
+    - [x] CLI: List/Revoke keys
+    - [x] Validate function for Gateway
+- [x] **Gateway Upgrade** ([gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py))
+    - [x] Import registry validator
+    - [x] Add 401 response for invalid API Key
+    - [x] Dual-check: API Key + Macaroon
+
+### Client-Side Tasks
+- [x] **SDK Upgrade** ([sdk/sovereign.py](file:///c:/Users/rovie%20segubre/agent/sdk/sovereign.py))
+    - [x] Add `api_key` parameter to constructor
+    - [x] Send `X-Sovereign-Api-Key` header
+    - [x] Handle 401 vs 402 distinctly
+    - [x] Mock Mode support
+- [x] **Autonomous Core** ([autonomous_core.py](file:///c:/Users/rovie%20segubre/agent/autonomous_core.py))
+    - [x] Mock Mode support (`MOCK_MODE=1`)
+    - [x] Fuel level monitoring
+    - [x] Auto-refuel logic
+    - [x] 24/7 operation loop
+
+### Verification
+- [x] API Key Registry CLI tested
+- [x] SDK Phase 7 import verified
+- [x] Test key created: `sk-sov-c7252fa6ec052be9f3208e5461d06be2`

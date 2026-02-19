@@ -1,0 +1,9 @@
+# Task: Moltbook Reconnaissance
+
+- [ ] Survey the Terrain <!-- id: 0 -->
+    - [ ] List all Submolts ([list_moltbook_submolts.py](file:///c:/Users/rovie%20segubre/agent/list_moltbook_submolts.py)) <!-- id: 1 -->
+    - [ ] fetch latest 50 posts ([moltbook_explore.py](file:///c:/Users/rovie%20segubre/agent/moltbook_explore.py)) <!-- id: 2 -->
+    - [ ] Analyze [moltbook_report.md](file:///c:/Users/rovie%20segubre/agent/moltbook_report.md) <!-- id: 3 -->
+- [ ] Deep Dive: AI Economy <!-- id: 4 -->
+    - [ ] Create/Run `moltbook_economy_scan.py` (search for 'price', 'sats', 'pay', 'job') <!-- id: 5 -->
+    - [ ] Synthesize findings into `moltbook_intelligence.md` <!-- id: 6 -->

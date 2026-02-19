@@ -1,0 +1,29 @@
+# NotebookLM Setup- [ ] Data Collection and Analysis
+    - [/] Setup NotebookLM
+        - [x] Create project
+        - [x] Upload [ab_test_summary.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_summary.csv)
+        - [x] Upload [ab_test_trades.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_trades.csv)
+        - [x] Verify connection with test query
+        - [x] Create core context guide ([NOTEBOOKLM_CONTEXT_GUIDE.md](file:///C:/Users/rovie%20segubre/.gemini/antigravity/brain/6d23d5cf-6064-4f4b-ac60-9703e6bcfe68/NOTEBOOKLM_CONTEXT_GUIDE.md))
+        - [x] Create code reference doc ([CODE_REFERENCE.md](file:///C:/Users/rovie%20segubre/.gemini/antigravity/brain/6d23d5cf-6064-4f4b-ac60-9703e6bcfe68/CODE_REFERENCE.md))
+        - [ ] Upload context docs to NotebookLM
+    - [x] Update Timeframe References (15m -> 1h)
+        - [x] Update NotebookLM context artifacts
+        - [x] Update python codebase comments and strings
+    - [x] Improve A/B Test Logging (NotebookLM Feedback)
+        - [x] Implement dynamic header generation in [strategy_ab_tester.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py)
+        - [x] specific strategy multiplier columns to CSV
+        - [x] Ensure `market_slug` is logged
+    - [/] Fix Missing Data Issues
+        - [x] Investigate/Fix empty indicators in [btc_data_1m.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/btc_data_1m.csv) (Found root cause: Missing calc in [indicator_filters.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/indicator_filters.py))
+        - [x] Prevent row truncation in CSV logs (Added flush/fsync)
+        - [x] Verify strategy activity (Whale Watcher) (Operational, just inactive)
+    - [x] Implement CSV Log Rotation
+        - [x] Add `ROW_LIMIT` config (Default: 30,000 rows, updated per request)
+        - [x] Implement rotation in [market_data_logger.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/market_data_logger.py) (Automatic archive on limit)
+        - [x] Implement rotation in [strategy_ab_tester.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py) (Automatic archive on limit)
+- [/] A/B Testing & Optimization NotebookLM <!-- id: 5 -->
+- [ ] Push to GitHub
+    - [x] Secure .env in .gitignore
+    - [ ] Initialize Git Repo
+    - [ ] Push to Remote using gh cli

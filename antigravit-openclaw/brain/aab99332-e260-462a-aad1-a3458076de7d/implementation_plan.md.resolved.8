@@ -1,0 +1,14 @@
+# Orchestrator Setup Plan
+
+## Goal Description
+I will create a user-friendly "Manager Agent" workflow. This workflow will wrap the powerful orchestration capabilities into a simple command `/manager`.
+
+## Proposed Changes
+- `[NEW] .agent/workflows/manager.md`: A workflow that:
+    1.  Adopts the persona of a "Project Manager".
+    2.  Asks the user for their high-level goal.
+    3.  Automatically selects and invokes the right specialist agents.
+    4.  Summarizes the work.
+
+## Verification
+- Usage: `/manager Build a portfolio site` -> Triggers the manager loop.

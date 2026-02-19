@@ -1,0 +1,22 @@
+# Tasks
+
+- [x] Integrate `sickn33/antigravity-monitor`
+- [x] Establish Antigravity Monitor V2 (Always-On Inbox)
+- [x] Research Moltbook & Finance Topics (Security Sentinel)
+- [x] Prototype Machine-First Economy (L402 Gateway + Buyer)
+- [x] Consult Gemini on Strategy (Stack + Model Selection)
+- [x] Document Robust Browser Skills
+- [x] Implement Always-On Monitor (Windows)
+    - [x] Create directory structure (.agent/inbox/*)
+    - [x] Write `scripts/antigravity_monitor.py`
+    - [x] Create `START_MONITOR.bat`
+- [x] Transition from Mock to Real L402 (Alby Integration)
+- [x] Implement Compute Dropshipping (OpenRouter Switched)
+    - [x] **Constraint:** Implement strict `max_tokens` cost caps.
+    - [x] **Safety:** Add `ENVIRONMENT` check.
+    - [x] **Provider:** Switched to OpenRouter (Access to Llama 3.3, R1, GPT-4o).
+- [ ] Research & Join Moltbook <!-- id: 55 -->
+    - [ ] Read `https://moltbook.com/skill.md` <!-- id: 56 -->
+    - [ ] Analyze "AI-AI economy" concepts <!-- id: 57 -->
+    - [ ] Perform security audit for Moltbook instructions <!-- id: 58 -->
+    - [ ] Ask clarifying questions to user <!-- id: 59 -->

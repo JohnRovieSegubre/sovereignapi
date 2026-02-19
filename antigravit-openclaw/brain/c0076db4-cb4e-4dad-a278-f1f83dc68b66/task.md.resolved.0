@@ -1,0 +1,12 @@
+# Task: Analyze 24/7 System & Fix Hardcoded Paths
+
+- [ ] Analyze 24/7 System Architecture <!-- id: 0 -->
+    - [ ] Read [gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py) <!-- id: 1 -->
+    - [ ] Read [START_MONITOR.bat](file:///c:/Users/rovie%20segubre/agent/START_MONITOR.bat) and [sentinel.ps1](file:///c:/Users/rovie%20segubre/agent/sentinel.ps1) <!-- id: 2 -->
+    - [ ] Read [scripts/watchdog.py](file:///c:/Users/rovie%20segubre/agent/scripts/watchdog.py) <!-- id: 3 -->
+- [ ] Fix Hardcoded Paths <!-- id: 4 -->
+    - [ ] specific grep search for `obsidian-trifid` with line numbers <!-- id: 5 -->
+    - [ ] Update files with new paths <!-- id: 6 -->
+- [ ] Document System Usage <!-- id: 7 -->
+    - [ ] Explain how the 24/7 system works to the user <!-- id: 8 -->
+    - [ ] Provide instructions on how to apply/run it <!-- id: 9 -->

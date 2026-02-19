@@ -1,0 +1,79 @@
+# BTC 1-Hour Options Bot: Context Guide
+
+## 1. Project Overview
+This project is an automated high-frequency trading bot designed for **1-hour Bitcoin (BTC) binary options** on Polymarket (or similar prediction markets). The bot predicts whether the price of BTC will be UP or DOWN at the end of a 1-hour window.
+
+### Core Objective
+- **Market:** BTC/USD 1-hour binary options.
+- **Mechanism:** The bot analyzes market data (price velocity, order flow, momentum) to calculate a "Fair Value" probability.
+- **Execution:** It places limit orders on the order book (CLOB) when the market price deviates significantly from its calculated Fair Value (creating an "edge").
+
+---
+
+## 2. Architecture Logic
+The bot operates in a modular loop (typically every 5 seconds):
+1.  **Data Fetching:** Pulls real-time BTC price (Binance/Chainlink) and Order Book data (Polymarket).
+2.  **Signal Generation:** Runs multiple technical strategies (see Section 4) to determine a directional bias.
+3.  **Amplification:** Strategies do not just vote "Buy/Sell"; they "amplify" the probability.
+    - *Base Probability:* 50% (neutral).
+    - *Amplification:* If Momentum is bullish, it might multiply the UP probability by 1.05 (5% boost).
+    - *Combined Amp:* All active strategies are aggregated to form a final conviction multiplier.
+4.  **Pricing Engine:** Converts the amplified probability into a fair price (e.g., 0.65 USDC for a 'Yes' share).
+5.  **Execution:** If the market Ask price is lower than the Fair Value (e.g., Ask $0.60 vs Fair $0.65), it places a BUY order.
+
+---
+
+## 3. A/B Testing Framework
+The bot includes a robust **Strategy A/B Tester** to validate different hypotheses without risking real capital.
+
+- **Virtual Portfolios:** It runs 26 simultaneous virtual portfolios, each starting with $100.
+- **Configuration Tiers:**
+    - **Tier 1 (Isolation):** Tests individual signals (e.g., `velocity_only`, `binance_ofi_only`).
+    - **Tier 2 (Combos):** Tests synergies (e.g., `scalper_combo` = Velocity + OFI).
+    - **Tier 3/4 (Tuning):** Tests entry/exit parameters (e.g., `aggressive_entries` vs `tight_max_edge`).
+    - **Tier 5 (Sensitivity):** Tests Order Flow Imbalance (OFI) sensitivity.
+    - **Tier 6 (Archetypes):** Named personas like `whale_watcher` (Sniper) or `trend_hunter` (Home Run).
+
+### Key Metrics for Analysis
+When analyzing [ab_test_summary.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_summary.csv) or [ab_test_trades.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_trades.csv), focus on:
+- **Win Rate:** Percentage of profitable trades.
+- **Total PnL:** Net profit/loss.
+- **Expectancy:** Average profit per trade.
+- **Resilience:** Performance during high volatility or low volume.
+
+---
+
+## 4. Key Strategies & Signals
+
+| Strategy | Description | Logic |
+| :--- | :--- | :--- |
+| **Price Velocity** | High-frequency trend | Measures the speed and acceleration of price moves over the last ~3-6 seconds. Fast moves suggest continuation. |
+| **Binance OFI** | Order Flow Imbalance | Analyzes the *Binance* order book depth (not Polymarket). Assessing if buying or selling pressure is dominant on the world's largest exchange (leading indicator). |
+| **Momentum** | Trend Following | Standard MACD, RSI, and ROC (Rate of Change) indicators to determine the broader 15m/1h trend. |
+| **Volume Profile** | Support/Resistance | Analyzes where trading volume has clustered. Price tending to revert to high-volume nodes or reject from low-volume gaps. |
+| **OBV Divergence** | Fakeout Detector | On-Balance Volume. If price goes up but volume goes down (divergence), it predicts a reversal/fakeout. |
+| **Exhaustion** | Mean Reversion | Uses Williams %R and RSI to detect when a move is overextended and likely to snap back. |
+
+---
+
+## 5. Data Dictionary (CSV Files)
+
+### [ab_test_summary.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_summary.csv)
+- [config](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py#853-969): Name of the strategy configuration (e.g., `scalper_combo`).
+- [win_rate](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py#654-660): Percentage of winning trades.
+- [current_equity](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py#661-668): Ending balance (Start $100 + PnL).
+
+### [ab_test_trades.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_trades.csv)
+- `signal`: The raw signal triggering the trade (e.g., `BUY_UP`).
+- `amp_up` / `amp_down`: The amplification multipliers at the time of trade. A value of `1.10` means a 10% boost to conviction.
+- [entry_price](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py#1106-1117) / `exit_price`: Execution prices.
+- [pnl](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py#1082-1091): Profit or loss on that specific trade.
+- `market_slug`: The specific 1-hour market identifier.
+
+---
+
+## 6. Current Best Performer (Snapshot)
+As of the latest test:
+- **Strategy:** `scalper_combo`
+- **Logic:** Combines **Price Velocity** (immediate speed) with **Binance OFI** (whale liquidity).
+- **Why it works:** It enters purely on aggressive, short-term momentum and liquidity imbalances, ignoring slower lagging indicators like MACD.

@@ -1,0 +1,29 @@
+# Tasks
+
+- [x] Integrate `sickn33/antigravity-monitor`
+- [x] Establish Antigravity Monitor V2 (Always-On Inbox)
+- [x] Research Moltbook & Finance Topics (Security Sentinel)
+- [x] Prototype Machine-First Economy (L402 Gateway + Buyer)
+- [x] Consult Gemini on Strategy (Stack + Model Selection)
+- [x] Document Robust Browser Skills
+- [x] Implement Always-On Monitor (Windows)
+- [x] Transition from Mock to Real L402 (Alby Integration)
+- [x] Implement Compute Dropshipping (OpenRouter Switched)
+- [x] **Manual stranger payment test (SUCCESS)**
+    - [x] Request invoice via `curl`.
+    - [x] Verify real Alby settlement via preimage hashing.
+    - [x] Receive DeepSeek-R1 response as a paid client.
+- [/] Research & Join Moltbook
+    - [x] Create [Moltbook_Registration.json](file:///c:/Users/rovie%20segubre/agent/Moltbook_Registration.json).
+    - [ ] Run [post_moltbook.py](file:///c:/Users/rovie%20segubre/agent/post_moltbook.py) with the ngrok public URL.
+- [ ] **Sovereign Mint: Multi-Currency Support**
+    - [x] Install `pymacaroons` dependency.
+    - [x] Implement [SovereignMint](file:///c:/Users/rovie%20segubre/agent/gateway_server.py#58-151) class in [gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py).
+    - [x] Add `/v1/admin/mint` endpoint (secured by Admin Key).
+    - [x] Update auth middleware to accept `Authorization: Bearer <TOKEN>`.
+    - [x] Create [mint_secret.json](file:///c:/Users/rovie%20segubre/agent/.agent/secure/mint_secret.json) in `.agent/secure/`.
+    - [x] Test end-to-end: Mint → Spend → Verify Deduction.
+    - [x] **Security Fix:** Implement Replay Attack Protection (Used Token Blacklist).
+- [ ] **Smart Client: Automated Token Rotation**
+    - [ ] Update `wallet_client.py` to auto-capture `X-Sovereign-Balance-Token`.
+    - [ ] Implement robust error handling for 402/403.

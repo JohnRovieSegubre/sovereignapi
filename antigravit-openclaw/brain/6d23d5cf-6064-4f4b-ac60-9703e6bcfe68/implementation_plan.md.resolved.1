@@ -1,0 +1,43 @@
+# NotebookLM Logging Improvement Plan
+
+## Goal
+To solve the "Black Box" issue identified by NotebookLM where [strategy_votes.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/strategy_votes.csv) lacks headers and detailed strategy contribution data (multipliers). This prevents attributing buy/sell signals to specific strategies like [binance_ofi](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py#727-783) or [price_velocity](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#2502-2663).
+
+## User Review Required
+> [!NOTE]
+> This change will modify the format of [ab_test_results/strategy_votes.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/strategy_votes.csv) and [ab_test_results/ab_test_trades.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_trades.csv). Existing parsers (if any, besides NotebookLM) might need updating.
+
+## Proposed Changes
+
+### 1. [strategy_ab_tester.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py)
+- Modify `StrategyABTester.__init__`:
+    - Generate a dynamic header for [strategy_votes.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/strategy_votes.csv) that includes columns for all potential strategy multipliers (e.g., [momentum_amp](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#1721-1748), [velocity_amp](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#2424-2500), `ofi_amp`).
+    - Write this header when initializing the file.
+- Modify `StrategyABTester._log_evaluation`:
+    - Extract individual strategy multipliers from the `combined_amp['strategy_details']` dictionary.
+    - Write these values to the new columns in [strategy_votes.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/strategy_votes.csv).
+- Modify `StrategyABTester.log_trade` (if applicable) or ensure [ab_test_trades.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_trades.csv) also captures this granularity if needed (though the primary request is for the voting log).
+- Ensure `market_slug` is included in all log rows.
+
+### 2. [main_bot_optimized.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py)
+- No major changes expected here, as [StrategyABTester](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py#674-1518) handles the logging logic. We just need to ensure the [combined_amp](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#3069-3595) dictionary passed to it contains the full `strategy_details` (which it already does based on [amplification_strategies.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py) review).
+
+## Verification Plan
+
+### Automated Verification
+- **Run A/B Test in Test Mode:**
+    - Execute [run_ab_test.bat](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/run_ab_test.bat) (or equivalent command) for a short duration (e.g., 1 minute).
+    - Check the generated [ab_test_results/strategy_votes.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/strategy_votes.csv).
+    - **Pass Criteria:**
+        - The file has a header row.
+        - The header contains columns for `market_slug`, [momentum_amp](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#1721-1748), [velocity_amp](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#2424-2500), etc.
+        - The data rows contain numerical values (e.g., `1.05`, `0.98`) under these columns.
+        - `market_slug` column is populated.
+
+### Manual Verification
+### Manual Verification
+- **Header Check:** Open the CSV file and visually confirm the header matches the expected format: `timestamp,market_slug,config,final_vote,momentum_amp,velocity_amp,...`
+
+## Fixes Applied (Step 420)
+- **Missing Data:** Updated [indicator_filters.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/indicator_filters.py) to calculate and return MACD, Stochastic, and ROC, which were previously missing from the [indicators](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#179-224) dictionary, causing empty columns in [btc_data_1m.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/btc_data_1m.csv).
+- **Truncation:** Added `flush()` and `fsync()` to all CSV writers to prevent data loss.

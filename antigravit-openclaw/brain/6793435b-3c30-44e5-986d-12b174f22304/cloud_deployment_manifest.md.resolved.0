@@ -1,0 +1,104 @@
+# Cloud Deployment Manifest: Sovereign Mint
+
+**Target:** Google Cloud Platform (Compute Engine / VPS)
+**OS:** Ubuntu 22.04 LTS (Recommended) or Debian 11
+
+---
+
+## 📦 1. Upload Checklist
+Upload ONLY these files/folders to your cloud server (e.g., via `scp` or `SFTP`).
+
+### Core Files (Root Directory)
+- [ ] [gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py) (The Brain)
+- [ ] [polygon_watcher.py](file:///c:/Users/rovie%20segubre/agent/polygon_watcher.py) (The Cashier)
+- [ ] [wallet_client.py](file:///c:/Users/rovie%20segubre/agent/wallet_client.py) (The Agent)
+- [ ] [requirements.txt](file:///c:/Users/rovie%20segubre/agent/requirements.txt) (Dependencies)
+- [ ] [README.md](file:///c:/Users/rovie%20segubre/agent/README.md) (Documentation)
+
+### ⛔ DO NOT UPLOAD (Security Risk)
+- `X` `.agent/secure/` (Contains your local API keys!)
+- `X` `.agent/data/` (Contains local database/state)
+- `X` `__pycache__/`
+- `X` `.git/`
+- `X` `scripts/` (Test scripts are not needed in production)
+
+---
+
+## ⚙️ 2. Server Configuration
+Once files are uploaded, SSH into your server and run these commands:
+
+### A. Install Dependencies
+```bash
+sudo apt update && sudo apt install python3-pip -y
+pip3 install -r requirements.txt
+```
+
+### B. Set Environment Variables (The "Secrets")
+Instead of uploading `mint_secret.json`, set these variables in your cloud environment (or `.bashrc`).
+
+```bash
+# 1. Generate a strong secret for your Mint
+export MINT_SECRET="your_super_secure_random_string_here"
+
+# 2. Your Admin API Key (same as above, or different if you change the code)
+export ADMIN_KEY="$MINT_SECRET"
+
+# 3. External API Keys
+export ALBY_ACCESS_TOKEN="your_alby_token_here"
+export OPENROUTER_API_KEY="your_openrouter_key_here"
+
+# 4. Public URL (If using a domain)
+export SITE_URL="https://your-cloud-ip-or-domain.com"
+export ENVIRONMENT="PRODUCTION"
+```
+
+---
+
+## 🚀 3. Start the System (24/7)
+Use `systemd` or `tmux` to keep the services running.
+
+### Option A: Simple (tmux)
+```bash
+# 1. Start Gateway
+tmux new -s gateway
+python3 gateway_server.py
+# (Ctrl+B, D to detach)
+
+# 2. Start Watcher
+tmux new -s watcher
+export MY_WALLET_ADDRESS="0xC8Dc2795352cdedEF3a11f1fC9E360D85C5aAC4d"
+python3 polygon_watcher.py
+# (Ctrl+B, D to detach)
+```
+
+### Option B: Robust (Systemd Service)
+Create `/etc/systemd/system/sovereign-gateway.service`:
+```ini
+[Unit]
+Description=Sovereign AI Gateway
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/root/agent
+ExecStart=/usr/bin/python3 gateway_server.py
+Restart=always
+Environment="MINT_SECRET=..."
+Environment="OPENROUTER_API_KEY=..."
+
+[Install]
+WantedBy=multi-user.target
+```
+
+---
+
+## 🔍 4. Verification
+From your local machine (Laptop):
+
+```bash
+# Point your local wallet to the Cloud IP
+set GATEWAY_URL=http://<YOUR_CLOUD_IP>:8000/v1/chat/completions
+
+# Test connection
+python wallet_client.py "Are you running on the cloud?"
+```

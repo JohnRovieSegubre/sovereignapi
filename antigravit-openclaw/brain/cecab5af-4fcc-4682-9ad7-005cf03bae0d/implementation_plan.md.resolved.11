@@ -1,0 +1,51 @@
+# Improve Riddle Segmentation & Display (AI Selection & Filtering)
+
+The goal is to ensure the bot behaves like a true **AI Assistant** by reviewing video titles and descriptions *before* downloading, ensuring they are actual riddle videos and not compilations or irrelevant content.
+
+## Proposed Changes
+
+### [MODIFY] [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py)
+- **New Method**: [check_video_relevance(title, description) -> bool](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py#33-46)
+    - Uses the LLM to analyze the metadata.
+    - Prompt: "Is this video likely to contain short riddles suitable for extraction? Title: {t}, Desc: {d}. Answer YES/NO."
+
+### [MODIFY] [youtube_client.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/youtube_client.py)
+- **Duration Parsing**: Fetch `contentDetails` to get video duration.
+- **Filtering**: Return duration in the video metadata dict so the bot can skip long videos.
+
+### [MODIFY] [riddle_bot.py](file:///c:/Users/rovie%20segubre/clipper/riddle_bot.py)
+- **Selection Loop**:
+    1.  Fetch recent videos (metadata only).
+    2.  **Filter 1 (Hard)**: Skip if duration > 20 mins (Compilations).
+    3.  **Filter 2 (AI)**: Call [check_video_relevance(title, desc)](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py#33-46).
+    4.  **Download**: Only if both filters pass.
+
+## Verification Plan
+
+### Manual Verification
+- Run [riddle_bot.py](file:///c:/Users/rovie%20segubre/clipper/riddle_bot.py).
+- Observe logs: "AI checking 'Video Title'..." -> "Skipping (Not a riddle video)" or "Downloading...".
+
+## Vision Integration (OpenCLIP/CoCa)
+
+### Visual Content Analysis
+- **Goal**: Understand the visual context of the riddle video (e.g., "A specific image shown at 0:15").
+- **Model**: `open_clip` with `coca_ViT-B-32` architecture (smaller, faster alternative to L-14).
+    - Capable of image captioning (generative).
+    - Uses `mscoco_finetuned_laion2b_s13b_b90k` weights.
+- **Implementation**:
+    - [ImageDescriber](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py#30-81) class in [analyze.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py).
+    - [find_riddle_segments](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py#47-99) uses [extract_frame](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/ffmpeg_utils.py#66-91) to get a timestamped image.
+    - [check_video_relevance](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py#33-46) and persona prompts include this visual description.
+
+### Verification Plan
+- **Script**: [scripts/verify_vision.py](file:///c:/Users/rovie%20segubre/clipper/scripts/verify_vision.py) to test frame extraction and captioning.
+### Real AI Verification (User Request)
+- **Action**: Disable `MOCK_VISION` and run full pipeline with actual model.
+- **Model**: `coca_ViT-B-32` (smaller download).
+- **Command**: `python riddle_bot.py --file <video>` (without `MOCK_VISION=true`).
+- **Adjustments**: 
+    - Installed `faster-whisper` for speed.
+    - Relaxed [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py) heuristics to accept 'scenarios'.
+    - Fixed FFmpeg rendering issues (absolute paths, 6-digit hex color).
+- **Goal**: Confirm the vision model correctly captions images and integrates with the persona generation.

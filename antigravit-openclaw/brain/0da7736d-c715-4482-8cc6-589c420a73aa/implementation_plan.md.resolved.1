@@ -1,0 +1,75 @@
+# Implementation Plan - Comic/Manga Panel Animation System
+
+## Goal Description
+Create a deterministic system to animate "in-between" motion for two comic/manga panels showing the same character.
+**MVP Scope**: reliably animate simple pose changes (arms, head, slight torso rotation) with preserved identity.
+**Out of Scope**: full-body flips, heavy foreshortening, multi-character scenes, complex background changes.
+
+## Acceptance Criteria (MVP)
+- **Start-frame SSIM**: ≥ 0.88 (relative to cropped start image)
+- **End-frame SSIM**: ≥ 0.88 (relative to cropped end image)
+- **Character Identity**: CLIP cosine similarity ≥ 0.80
+- **Visual**: No heavy flicker, readable motion.
+- **Human Review**: ≥ 80% pass rate ("same character", "plausible motion").
+- **Determinism**: Identical output for same inputs + seed.
+
+## Hardware & Environment
+- **Dev/Light**: NVIDIA 8-12GB (RTX 3060/3070) for SAM (vit_b) + MediaPipe.
+- **High Quality**: NVIDIA 16-24GB+ (RTX 3090/4090) for SAM (vit_h) and Diffusion refinement.
+
+## Architecture & Modules
+
+### `src/config.py`
+Centralized configuration for hyperparameters (FPS, resolution, seeds, easing curves, mask strategies).
+
+### `src/pipeline/`
+- **`preprocessing.py`**:
+    - Idempotent normalization to fixed workspace (e.g., 1024x1024).
+    - Save transform metadata (scale, offset) for accurate recompositing.
+    - Support for auto-detecting panels and manual crops.
+- **`segmentation.py`** (Masking):
+    - Wrapper for SAM with multiple strategies: `largest_area`, `center_overlap`, `union`.
+    - Fallbacks: Simple thresholding if SAM fails.
+    - Morphological operations (dilate/erode) for stability.
+- **`keypoints.py`** (Pose):
+    - Wrapper for MediaPipe with fallback to OpenPose (conceptually) or manual correction.
+    - Normalize keypoints to image space.
+    - Infer missing joints if possible.
+- **`motion_planner.py`** (Interpolation):
+    - Schemes: Linear, Cubic Hermite, Ease-in-out.
+    - Constraints: Pinning joints (e.g., torso).
+    - Output: Sequence of intermediate skeletons.
+- **`warping.py`** (Generation):
+    - Robust Delaunay triangulation (anchors at corners).
+    - Barycentric mapping for pixel warping.
+    - Hole filling (inpaint).
+    - Fallback: Detect severe distortion -> trigger diffusion generation (future).
+- **`rendering.py`** (Composite):
+    - FFmpeg export (MP4/WebM).
+    - Options: Hard vs Feathered composite.
+    - Temporal smoothing (blending).
+
+### `src/utils/`
+- **`visualization.py`**: Visual diffs, skeleton overlays, side-by-side debug views.
+- **`io.py`**: Robust path handling, atomic writes, `run_manifest.json` (metadata).
+
+### `tests/` & `scripts/`
+- Unit/Integration tests for pipeline components.
+- One-liner demo scripts in `scripts/`.
+
+## Failure Modes & Recovery
+- **MediaPipe Failure**: Fallback to manual entry or heuristic.
+- **SAM Failure**: Fallback to thresholding or manual mask.
+- **Warp Distortion**: Detect via metric, flag for diffusion/manual fix.
+
+## Verification Plan
+
+### Automated Verification
+- **Unit Tests**: Interpolation math, coordinate transforms, I/O safety.
+- **Integration**: Full run on "stick figure" synthetic data.
+- **Determinism**: Verify identical output for same seed.
+- **Resource Check**: Monitor VRAM usage.
+
+### Manual Verification
+- **Visual Inspection**: Flicker, limb integrity, face preservation.
+- **Metrics Dashboard**: Review SSIM/CLIP scores per run.

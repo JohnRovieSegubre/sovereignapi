@@ -1,0 +1,10 @@
+# Tasks
+
+- [x] Install Antigravity Kit `vudovn/antigravity-kit` <!-- id: 0 -->
+- [x] Configure Orchestrator Agent <!-- id: 1 -->
+- [x] Demonstrate Agent Creation <!-- id: 2 -->
+- [x] Prepare Migration to New Workspace <!-- id: 3 -->
+    - [x] Explain local nature of .agent folder <!-- id: 4 -->
+    - [x] Add [MIGRATION_GUIDE.md](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/MIGRATION_GUIDE.md) <!-- id: 5 -->
+    - [x] Create [migration_kit.zip](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/migration_kit.zip) <!-- id: 6 -->
+    - [x] Verify Zip File <!-- id: 7 -->

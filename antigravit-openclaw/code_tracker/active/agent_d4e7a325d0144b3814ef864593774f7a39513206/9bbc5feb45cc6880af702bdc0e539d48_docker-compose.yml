@@ -1,0 +1,40 @@
+÷version: '3.8'
+
+services:
+  gateway:
+    build: .
+    container_name: sovereign_gateway
+    command: python gateway_server.py
+    ports:
+      - "80:8000"
+    volumes:
+      - ./data:/app/.agent
+    environment:
+      # Core Secrets
+      - MINT_SECRET=${MINT_SECRET}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - ALBY_ACCESS_TOKEN=${ALBY_ACCESS_TOKEN}
+      - SITE_URL=${SITE_URL}
+      
+      # x402 Hybrid Config
+      - ENABLE_X402=${ENABLE_X402}
+      - X402_WALLET_ADDRESS=${X402_WALLET_ADDRESS}
+      - X402_FACILITATOR_URL=${X402_FACILITATOR_URL}
+      
+    restart: always
+
+  watcher:
+    build: .
+    container_name: polygon_cashier
+    command: python polygon_watcher.py
+    depends_on:
+      - gateway
+    environment:
+      - GATEWAY_MINT_URL=http://gateway:8000/v1/admin/mint
+      - MY_WALLET_ADDRESS=${MY_WALLET_ADDRESS}
+      - POLYGON_RPC=${POLYGON_RPC}
+      - ADMIN_KEY=${MINT_SECRET}
+    volumes:
+      - ./data:/app/.agent
+    restart: always
+¨ *cascade08¨Ò*cascade08Òæ *cascade08æç*cascade08çé *cascade08éô*cascade08ôž *cascade08ž·*cascade08·¸ *cascade08¸à*cascade08àê *cascade08êÒ*cascade08ÒÂ *cascade08Âò*cascade08ò÷ *cascade08"(d4e7a325d0144b3814ef864593774f7a3951320629file:///c:/Users/rovie%20segubre/agent/docker-compose.yml:&file:///c:/Users/rovie%20segubre/agent

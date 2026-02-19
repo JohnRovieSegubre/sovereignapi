@@ -1,0 +1,19 @@
+# Antigravity Kit Installation Plan
+
+## Goal Description
+The user wants to use resources from `https://github.com/vudovn/antigravity-kit`. I need to inspect this repository to identify if it contains Workflows, Skills, or other agent resources, and then "install" them into the user's workspace.
+
+## Proposed Changes
+
+### 1. Analysis
+- Clone `https://github.com/vudovn/antigravity-kit` to a temporary directory.
+- Inspect the file structure. Look for `SKILL.md` files or workflow definitions.
+
+### 2. Installation
+- **If Skills**: Copy them to a `skills/` directory in the user's workspace.
+- **If Workflows**: Copy them to `.agent/workflows/`.
+- **If Config**: Advise on any configuration updates needed.
+
+## Verification
+- List the installed skills/workflows.
+- Verify they are visible to the agent (I will attempt to "read" the new skill/workflow).

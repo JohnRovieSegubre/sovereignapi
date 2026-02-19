@@ -1,0 +1,45 @@
+# Improve Riddle Segmentation & Display
+
+The goal is to modernize the dormant [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py) logic by integrating it with the main AI architecture and to enhance the viewer experience by adding visual polish (countdowns, dynamic backgrounds) to the generated Shorts.
+
+## User Review Required
+
+> [!IMPORTANT]
+> This refactor changes [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py) to use [AnalyzerFactory](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py#197-211). We will remove the direct dependency on [gpt4all](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py#168-175) in this file to unify the AI stack.
+
+## Proposed Changes
+
+### Processing Logic (`src/clipper/processing`)
+
+#### [MODIFY] [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py)
+- **Refactor**: Create `RiddleAnalyzer` class inheriting from `BaseAnalyzer` (in `analyze.py` or imported).
+- **AI Integration**: Replace `pick_riddle_segment_ai` (which hardcodes `gpt4all`) with a method that uses `self.generate()` from the base analyzer.
+- **Improved Logic**:
+    - Use a prompt that asks the LLM to identify specific *timestamps* for the question and answer, rather than relying on fixed 10s/18s windows.
+    - Fallback: Keep the heuristic detector but make it smarter (e.g., dynamic freeze time based on question length).
+
+#### [MODIFY] [shorts_render.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py)
+- **Dynamic Background**: Instead of a static `freeze.png`, extract the *last frame* of the question segment, apply a blur filter, and use that as the background for the "thinking" time.
+- **Countdown**: Add a visual countdown overlay (3... 2... 1...) during the freeze phase using `ffmpeg` `drawtext` with time-based expression.
+- **Visual Polish**: Improve text readability with better box/shadow styling.
+
+### Configuration
+- Ensure `AnalyzerFactory` can return the new `RiddleAnalyzer` if requested (or we can just instantiate it directly in `bot.py` for now, as `bot.py` is the consumer).
+
+## Verification Plan
+
+### Automated Tests
+- **New Test**: `tests/test_riddle_logic.py`
+    - Verify `RiddleAnalyzer` correctly processes a sample transcript to find segments.
+    - Mock the LLM response to ensure the logic handles the JSON output correctly.
+- **New Test**: `tests/test_shorts_render.py` (Smoke Test)
+    - Run `render_riddle_short` with a small dummy video and dummy assets.
+    - Assert the output file is created.
+
+### Manual Verification
+1.  **Rendering Check**:
+    - Run a script (I will provide `scripts/demo_riddle_render.py`) that uses a sample input video.
+    - Inspect the output MP4 to check:
+        - The countdown works.
+        - The freeze frame is a blurred version of the video.
+        - Text overlays are readable.

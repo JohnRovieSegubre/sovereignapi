@@ -1,0 +1,6 @@
+# Task: Analyze OpenClaw Ansible Repo
+
+- [ ] Inspect file structure `list_dir` <!-- id: 0 -->
+- [ ] Read `README.md` <!-- id: 1 -->
+- [ ] Analyze Playbooks and Roles <!-- id: 2 -->
+- [ ] Summarize findings <!-- id: 3 -->

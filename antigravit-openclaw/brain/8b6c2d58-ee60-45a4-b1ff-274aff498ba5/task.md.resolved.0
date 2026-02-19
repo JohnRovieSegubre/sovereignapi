@@ -1,0 +1,33 @@
+# A/B Testing Implementation Tasks
+
+## Phase 1: Core Module
+- [ ] Create `strategy_ab_tester.py` module
+  - [ ] Define all 26 test configurations
+  - [ ] Virtual portfolio tracking per config
+  - [ ] Trade signal evaluation per config
+  - [ ] P&L calculation
+
+## Phase 2: Logging System
+- [ ] Create `ab_test_results/` directory structure
+- [ ] Implement JSON logging (`ab_test_log.json`)
+- [ ] Implement CSV export (`ab_test_trades.csv`)
+- [ ] 30-minute summary reports to console
+
+## Phase 3: Alerts
+- [ ] Loss threshold alerts
+- [ ] Outperformance alerts
+- [ ] Low win rate alerts
+
+## Phase 4: Integration
+- [ ] Integrate A/B tester into main bot
+- [ ] Add config options for A/B testing
+- [ ] Create `run_ab_test.bat` startup script
+
+## Phase 5: Reporting
+- [ ] Final report generation (`final_report.md`)
+- [ ] Rankings and recommendations
+- [ ] Summary statistics
+
+## Phase 6: Testing
+- [ ] Syntax check all new files
+- [ ] Run quick validation test

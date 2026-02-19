@@ -1,0 +1,50 @@
+# Domain & Blog Setup — sovereign-api.com
+
+## Step 1: Cloudflare DNS Records (You do this)
+
+Log into Cloudflare → `sovereign-api.com` → **DNS** tab → Add these records:
+
+| Type | Name | Target | Proxy |
+|------|------|--------|-------|
+| **A** | `api` | `34.55.175.24` | ✅ Proxied |
+| **CNAME** | `blog` | `hashnode.network` | ❌ DNS Only |
+| **A** | `@` (root) | `34.55.175.24` | ✅ Proxied |
+
+> [!IMPORTANT]
+> The `blog` CNAME **must** be set to "DNS Only" (grey cloud), not "Proxied". Hashnode needs to handle its own SSL for custom domains.
+
+**Result after this step:**
+- `sovereign-api.com` → Your GCP Gateway
+- `api.sovereign-api.com` → Your GCP Gateway
+- `blog.sovereign-api.com` → Your Hashnode blog
+
+## Step 2: Hashnode Custom Domain (You do this)
+
+1. Go to Hashnode → Your blog → **Dashboard** → **Domain**
+2. Enter: `blog.sovereign-api.com`
+3. Hashnode will verify the CNAME and issue SSL automatically
+
+## Step 3: I Update the Codebase (I do this)
+
+#### [MODIFY] [gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py)
+- Change `SITE_URL` from ngrok to `https://api.sovereign-api.com`
+
+#### [MODIFY] [Moltbook_Registration.json](file:///c:/Users/rovie%20segubre/agent/Moltbook_Registration.json)
+- Update endpoint to `https://api.sovereign-api.com/v1/chat/completions`
+
+#### [NEW] [hashnode_blogger.py](file:///c:/Users/rovie%20segubre/agent/hashnode_blogger.py)
+- Hashnode GraphQL API client for autonomous blog posting
+- Hooks into Watchdog/Monitor loop via [actions.json](file:///c:/Users/rovie%20segubre/agent/.agent/actions.json)
+
+#### [MODIFY] [actions.json](file:///c:/Users/rovie%20segubre/agent/.agent/actions.json)
+- Add `blog_post` action
+
+## Step 4: First Blog Post (I do this)
+
+Title: **"Sovereign Intelligence API — The OpenAI Replacement That Pays With Crypto"**
+
+## Verification
+
+- `curl https://api.sovereign-api.com/v1/models` returns model list
+- `blog.sovereign-api.com` loads the Hashnode blog
+- `hashnode_blogger.py` can publish a post via API

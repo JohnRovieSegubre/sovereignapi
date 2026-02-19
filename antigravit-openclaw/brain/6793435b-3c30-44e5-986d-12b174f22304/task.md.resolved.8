@@ -1,0 +1,48 @@
+# Tasks
+
+- [x] Integrate `sickn33/antigravity-monitor`
+- [x] Establish Antigravity Monitor V2 (Always-On Inbox)
+- [x] Research Moltbook & Finance Topics (Security Sentinel)
+- [x] Prototype Machine-First Economy (L402 Gateway + Buyer)
+- [x] Consult Gemini on Strategy (Stack + Model Selection)
+- [x] Document Robust Browser Skills
+- [x] Implement Always-On Monitor (Windows)
+- [x] Transition from Mock to Real L402 (Alby Integration)
+- [x] Implement Compute Dropshipping (OpenRouter Switched)
+- [x] **Manual stranger payment test (SUCCESS)**
+    - [x] Request invoice via `curl`.
+    - [x] Verify real Alby settlement via preimage hashing.
+    - [x] Receive DeepSeek-R1 response as a paid client.
+- [/] Research & Join Moltbook
+    - [x] Create [Moltbook_Registration.json](file:///c:/Users/rovie%20segubre/agent/Moltbook_Registration.json).
+    - [ ] Run [post_moltbook.py](file:///c:/Users/rovie%20segubre/agent/post_moltbook.py) with the ngrok public URL.
+- [ ] **Sovereign Mint: Multi-Currency Support**
+    - [x] Install `pymacaroons` dependency.
+    - [x] Implement [SovereignMint](file:///c:/Users/rovie%20segubre/agent/gateway_server.py#80-173) class in [gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py).
+    - [x] Add `/v1/admin/mint` endpoint (secured by Admin Key).
+    - [x] Update auth middleware to accept `Authorization: Bearer <TOKEN>`.
+    - [x] Create [mint_secret.json](file:///c:/Users/rovie%20segubre/agent/.agent/secure/mint_secret.json) in `.agent/secure/`.
+    - [x] Test end-to-end: Mint → Spend → Verify Deduction.
+    - [x] **Security Fix:** Implement Replay Attack Protection (Used Token Blacklist).
+- [x] **Smart Client: Grand Unification**
+    - [x] Create unified `SovereignWallet` class in `wallet_client.py`.
+    - [x] Implement automatic token rotation (catch-the-change).
+    - [x] Verify infinite loop: Spend -> Rotate -> Spend (Repeat).
+    - [x] Delete `smart_wallet.py` prototype (redundant).
+- [x] **Polygon Watcher: Mailbox Protocol**
+    - [x] Create `polygon_watcher.py` for USDC deposit detection.
+    - [x] Add `PENDING_CLAIMS` mailbox to gateway_server.py.
+    - [x] Add `/v1/balance/claim` endpoint for async claiming.
+    - [x] Add `top_up(tx_hash)` method to wallet_client.py.
+    - [x] Configure wallet address: `0xC8Dc...`
+    - [x] Set fair market pricing (1428 sats/$1, 50% model discount).
+- [x] **Security Audit: Final Review**
+    - [x] Architecture validation.
+    - [x] Token lifecycle verification.
+    - [x] Recommendations documented (persistent mailbox, Binance API).
+    - [x] No critical vulnerabilities found.
+- [x] **Future Enhancements (Now Implemented)**
+    - [x] Chainlink Oracle for real-time BTC/USD exchange rates.
+    - [x] Persist PENDING_CLAIMS to disk (crash recovery).
+    - [x] Floor rounding on all sat conversions.
+    - [ ] Set `ENVIRONMENT=PRODUCTION` before launch.

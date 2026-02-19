@@ -1,0 +1,42 @@
+# Task List: Comic/Manga Panel Animation System
+
+- [/] Project Setup & Environment
+    - [x] Create project structure
+    - [x] Create requirements.txt
+    - [/] Create `src/config.py` for centralized params
+    - [/] Create `src/utils/io.py` (logging, manifest) & `src/utils/visualization.py`
+    - [/] Create `tests/` directory and initial pytest setup
+- [ ] Phase 1: Preprocessing & Assets
+    - [x] Script: Normalization & Panel Detection `preprocessing.py` (idempotent, metadata)
+    - [ ] Script: Segmentation `segmentation.py` (SAM, strategies, fallbacks)
+    - [ ] Script: Keypoints `keypoints.py` (MediaPipe, normalization, fallback logic)
+    - [ ] Test: Unit tests for scaling/coords
+- [ ] Phase 2: Motion Planning & Validation
+    - [x] Script: Motion Planner `motion_planner.py` (interpolation, constraints)
+    - [ ] Script: Debug visualization (Skeleton overlay, visual diffs)
+    - [ ] Test: Interpolation math tests
+- [ ] Phase 3: Frame Generation (MVP)
+    - [x] Script: Warping `warping.py` (Triangulation, barycentric, inpaint)
+    - [ ] Integration: Stick-figure end-to-end test
+    - [x] Integration: Stick-figure end-to-end test
+- [x] Phase 4: Refinement & Compositing
+    - [x] Script: Rendering & Compositing `rendering.py` (FFmpeg, temporal smooth)
+    - [x] Pipeline: `main.py` CLI (args, seed, debug mode)
+- [x] Phase 5: Metrics & QA
+    - [x] Script: Automated metrics (SSIM, CLIP) `metrics.py`
+    - [x] Docs: Write component documentation
+- [x] Phase 6: Sustainability & Research
+    - [x] Research: Anime-specific pose models (DeepPose, MMPose)
+    - [x] Architecture: Implementation of mask caching & raw-to-norm transformation
+    - [x] Fix: Reliable landmark detection on stylized manga
+    - [x] Planning: Manual keypoint correction UI
+- [x] Phase 7: Full Body Manga Support
+    - [x] Config: Switch to Pose mode & verify with Raw-to-Norm fix
+    - [x] Feature: "Skeleton Edit" UI (Manual Override) for complex poses
+    - [x] Research: Fallback to MMPose if MediaPipe fails on anime proportions
+    - [ ] Phase 8: Mesh Warping Refinement (VISION ALIGNMENT) <!-- id: 8 -->
+    - [x] Logic: **Canonical Topology Locking** (One mesh for all frames)
+    - [/] Math: **Barycentric Coordinate Caching** (Pre-compute weights)
+    - [ ] Quality: Geometry Hardening (Remove collinear points, min-angle enforcement)
+    - [ ] Tweak: Manga-specific stiffness weights (Rigid head, elastic limbs)
+    - [ ] Smooth: Temporal Vertex Smoothing (EMA/Spline)

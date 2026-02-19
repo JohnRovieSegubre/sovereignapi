@@ -1,0 +1,7 @@
+# Task: Debug Marketing Loop Crash
+
+- [x] Identify Crash Cause <!-- id: 0 -->
+    - [x] Read `marketing_loop_*_RESULT.md` <!-- id: 1 -->
+- [ ] Fix Issue <!-- id: 2 -->
+    - [ ] Apply fix to [moltbook_marketing.py](file:///c:/Users/rovie%20segubre/agent/moltbook_marketing.py) <!-- id: 3 -->
+    - [ ] Restart loop <!-- id: 4 -->

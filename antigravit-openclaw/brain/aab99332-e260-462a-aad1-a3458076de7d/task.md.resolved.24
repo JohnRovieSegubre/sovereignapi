@@ -1,0 +1,11 @@
+# Tasks
+
+- [x] Integrate `sickn33/antigravity-awesome-skills` <!-- id: 8 -->
+    - [x] Clone and Security Audit <!-- id: 9 -->
+    - [x] Report Capabilities & Safety <!-- id: 10 -->
+    - [x] Install Safe Skills <!-- id: 11 -->
+- [ ] Optimize Orchestrator for 200+ Skills <!-- id: 15 -->
+    - [ ] Analyze [orchestrator.md](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/.agent/agents/orchestrator.md) limits <!-- id: 16 -->
+    - [ ] Design Hierarchical Dispatch Pattern <!-- id: 17 -->
+    - [ ] Create Specialist Agent Definitions (`security-specialist.md`, `marketing-specialist.md`) <!-- id: 18 -->
+    - [ ] Update [orchestrator.md](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/.agent/agents/orchestrator.md) to delegate to Specialists <!-- id: 19 -->

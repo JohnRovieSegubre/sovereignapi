@@ -1,0 +1,89 @@
+# Walkthrough: Making Sovereign API Public-Ready
+
+## What Was Done
+
+### Security Hardening (6 Files Modified)
+
+| File | What Was Removed |
+|:-----|:-----------------|
+| [sdk/sovereign.py](file:///c:/Users/rovie%20segubre/agent/sdk/sovereign.py) | Hardcoded IP `34.55.175.24`, wallet `0xC8Dc...` |
+| [sdk/agent_customer.py](file:///c:/Users/rovie%20segubre/agent/sdk/agent_customer.py) | Hardcoded IP, wallet |
+| [polygon_watcher.py](file:///c:/Users/rovie%20segubre/agent/polygon_watcher.py) | Hardcoded wallet, Alchemy RPC URL |
+| [gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py) | `default_unsafe_secret_for_dev` |
+| [cloud_mint.py](file:///c:/Users/rovie%20segubre/agent/cloud_mint.py) | Hardcoded IP `34.55.175.24`, fake admin key |
+| [deploy_to_cloud.ps1](file:///c:/Users/rovie%20segubre/agent/deploy_to_cloud.ps1) | Hardcoded IP, username |
+
+### New Files Created (3)
+
+| File | Purpose |
+|:-----|:--------|
+| [.gitignore](file:///c:/Users/rovie%20segubre/agent/.gitignore) | Protects secrets, wallet files, `__pycache__` |
+| [.env.example](file:///c:/Users/rovie%20segubre/agent/sovereign_api/.env.example) | Template with all required env vars |
+| [README.md](file:///c:/Users/rovie%20segubre/agent/README.md) | Professional public documentation |
+
+### Verification Results
+
+All 4 grep scans returned **zero results**:
+- `34.55.175.24` → Not found
+- `0xC8Dc` → Not found
+- `default_unsafe` → Not found
+- `alchemy.com` → Not found
+
+---
+
+## How to Update the Cloud Server
+
+Since the code changed, you need to update the cloud server. Open the **Google Cloud Console SSH** terminal and run:
+
+### Step 1: Stop & clear
+```bash
+cd ~/sovereign
+sudo docker-compose down
+```
+
+### Step 2: Re-paste the 3 changed files
+
+```bash
+rm gateway_server.py && nano gateway_server.py
+```
+> Paste from local [sovereign_api/gateway_server.py](file:///c:/Users/rovie%20segubre/agent/sovereign_api/gateway_server.py) → Save (`Ctrl+X, Y, Enter`)
+
+```bash
+rm polygon_watcher.py && nano polygon_watcher.py
+```
+> Paste from local [sovereign_api/polygon_watcher.py](file:///c:/Users/rovie%20segubre/agent/sovereign_api/polygon_watcher.py) → Save
+
+```bash
+rm -rf sdk && mkdir sdk && nano sdk/__init__.py
+```
+> Paste [sdk/__init__.py](file:///c:/Users/rovie%20segubre/agent/sdk/__init__.py) content → Save
+
+```bash
+nano sdk/sovereign.py
+```
+> Paste from local [sovereign_api/sdk/sovereign.py](file:///c:/Users/rovie%20segubre/agent/sovereign_api/sdk/sovereign.py) → Save
+
+### Step 3: Update docker-compose.yml with new env vars
+
+```bash
+nano docker-compose.yml
+```
+
+Add these env vars to the `watcher` service:
+```yaml
+    environment:
+      - MY_WALLET_ADDRESS=0xC8Dc2795352cdedEF3a11f1fC9E360D85C5aAC4d
+      - POLYGON_RPC=https://polygon-mainnet.g.alchemy.com/v2/YOUR_KEY
+      - ADMIN_KEY=${MINT_SECRET}
+```
+
+### Step 4: Rebuild
+```bash
+sudo docker-compose up -d --build
+```
+
+### Step 5: Verify
+```bash
+sudo docker-compose ps
+curl http://localhost:8000/v1/models
+```

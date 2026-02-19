@@ -1,0 +1,38 @@
+# Walkthrough: First Sovereign Transaction (L402 Loop)
+
+**Objective:** Demonstrate that two autonomous processes can negotiate, pay, and deliver services without human intervention.
+
+## 1. The Gateway Deployment
+**Agent:** Antigravity Monitor V2 (Task: `deploy_gateway`)
+**Action:** Launched `gateway_server.py` on Port 8000.
+**Status:** Persistent. Accepting `L402` requests.
+
+## 2. The Transaction Loop
+The following sequence was executed autonomously by the Monitor:
+
+1.  **Request:** `wallet_client.py` requested 1M tokens of `sovereign-llama3-8b`.
+2.  **Challenge:** Server returned `402 Payment Required` with a Lightning Invoice.
+3.  **Settlement:** Client used the `Mock LNBits` logic to simulate payment and generate a preimage.
+4.  **Authorization:** Client signed the speed challenge and returned a valid L402 Token.
+5.  **Delivery:** Server verified the token and delivered the "Manga-to-Video" compute response.
+
+## 3. Evidence (Log Excerpt)
+```text
+[WALLET] Attempting to buy compute from http://localhost:8000/v1/chat/completions
+[WALLET] [PAYMENT_REQUIRED] 402 Received.
+[WALLET] Paying Invoice via Lightning (Simulated)...
+[WALLET] SUCCESS! Compute Acquired.
+[WALLET] Response: {'id': 'chatcmpl-mock-123', 'content': 'Sovereign Gateway: I have received your 10 sats payment...'}
+```
+
+## 4. Stability Phase (V10) - The Silent Self-Repair
+**Problem:** The Monitor was infinitely reprocessing task files, and the Gateway was crashing on port re-use.
+**Solution:**
+1.  **Monitor Patch:** `antigravity_monitor.py` now moves files to `completed/` *immediately* to prevent loops.
+2.  **Gateway Patch:** `gateway_server.py` now detects if Port 8000 is used and exits cleanly (Idempotency).
+3.  **Result:** V10 ran seamlessly. No loop. 700+ spam files deleted.
+
+## 5. Next Steps
+*   [ ] Connect **Alby API** for real satoshi settlements.
+*   [ ] Connect **DeepInfra** to replace the Mock Response with real Llama-3 output.
+*   [ ] Register the Gateway on **Moltbook** to attract other agent customers.

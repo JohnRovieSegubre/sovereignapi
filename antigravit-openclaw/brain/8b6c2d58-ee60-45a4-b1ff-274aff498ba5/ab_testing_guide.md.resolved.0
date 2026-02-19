@@ -1,0 +1,79 @@
+# A/B Testing Guide: 26 Strategy Comparison
+
+This guide explains how to run the newly implemented **26-configuration A/B test**, interpret the results, and use NotebookLM for deep analysis.
+
+## 🚀 How to Run the Test
+
+1. **Start the Test:**
+   Double-click [run_ab_test.bat](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/run_ab_test.bat) in your bot folder.
+   
+   *Or run via command line:*
+   ```bash
+   run_ab_test.bat
+   ```
+
+2. **Monitor Progress:**
+   - The bot will run in **Test Mode** (no real money used).
+   - Every **30 minutes**, it will print a summary table of all 26 configurations.
+   - Watch for **Alerts** (🔴 Loss, 🟢 Outperform) in the console.
+
+3. **Stop & Report:**
+   - Let it run for **24 hours** for best results.
+   - Press **Ctrl+C** to stop.
+   - The bot will automatically generate a final report before exiting.
+
+---
+
+## 📂 Output Files
+
+All results are saved in `ab_test_results/`:
+
+| File | Description | Use For |
+|------|-------------|---------|
+| `final_report.md` | Rankings, top 3 performers, recommendations | **Quick Overview** |
+| `ab_test_summary.csv` | Performance metrics over time | **Excel / Charts** |
+| `ab_test_trades.csv` | Every single virtual trade | **Deep Analysis** |
+| `ab_test_log.json` | Full decision logs | **Debugging** |
+
+---
+
+## 🤖 Analyzing with NotebookLM
+
+Use Google's AI to find hidden patterns in your test data.
+
+### Step 1: Upload Data
+1. Go to [notebooklm.google.com](https://notebooklm.google.com).
+2. Create a new notebook.
+3. Upload `ab_test_trades.csv` and `final_report.md`.
+
+### Step 2: Ask Questions
+Try these prompts to get deep insights:
+
+**Performance Analysis:**
+> "Compare the 'momentum_only' strategy against the 'baseline'. What was the win rate difference?"
+
+**Market Conditions:**
+> "Did 'binance_ofi_only' perform better during high volatility periods? (Check trades where amp_up > 1.05)"
+
+**Strategy Conflicts:**
+> "Find instances where 'momentum' signaled BUY but 'binance_ofi' signaled HOLD. Who was right?"
+
+**Optimization:**
+> "Based on the trade logs, which take-profit level (8%, 15%, 20%) maximized gains?"
+
+---
+
+## 🧪 Configurations Tested
+
+The test runs these 5 tiers simultaneously:
+
+1. **Strategy Isolation:** Does Momentum/OFI/Velocity work alone?
+2. **Combinations:** Do they work better together?
+3. **Entry Tuning:** Conservative vs Aggressive entry thresholds.
+4. **Exit Tuning:** Quick profits vs. Letting winners run.
+5. **Sensitivity:** Optimizing Binance OFI triggers.
+
+### Key Metrics to Watch
+- **Win Rate:** > 55% is good.
+- **P&L:** Total profit is the ultimate metric.
+- **Trade Count:** Too few (<5) = statistically insignificant. Too many (>50) = overtrading.

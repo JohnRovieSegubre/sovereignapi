@@ -1,0 +1,135 @@
+# NotebookLM Analysis Session - Discovery Report
+
+## Session Overview
+**Date:** January 30, 2026  
+**Data Sources:** 22 files including [ab_test_summary.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_summary.csv), [ab_test_trades.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/ab_test_trades.csv), [strategy_votes.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/strategy_votes.csv) (multiple versions), [btc_data_1m.csv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/ab_test_results/btc_data_1m.csv)
+
+This report summarizes insights discovered during an exploratory conversation with NotebookLM analyzing the BTC options bot's A/B testing performance.
+
+---
+
+## Key Discoveries
+
+### 1. Performance Leaderboard
+
+#### Winners (Profitable)
+| Config | Equity | P&L | Win Rate | Key Strength |
+|:-------|:-------|:----|:---------|:-------------|
+| **let_winners_run** | $102.91 | **+$2.91** | 69.2% | Wide TP targets (15%+) capture trends |
+| tighter_stops | $102.61 | +$2.61 | 69.7% | Quick loss cutting preserves capital |
+| **wider_stops** | $102.28 | +$2.28 | **79.3%** | Highest WR - trades breathe (-4% stop) |
+| velocity+binance_ofi | $101.12 | +$1.12 | 75.5% | Best signal combo |
+
+#### Losers (Bleeding Capital)
+| Config | Equity | P&L | Win Rate | Primary Failure Mode |
+|:-------|:-------|:----|:---------|:---------------------|
+| **aggressive_entries** | $86.18 | **-$13.82** | 62.3% | Over-trading noise, fee death |
+| **hybrid_exits** | $94.42 | -$5.58 | **5.7%** | FV_REVERSION panic selling |
+| fv_reversion_exit | $96.07 | -$3.93 | 15.1% | Premature exits on pullbacks |
+
+---
+
+### 2. Root Cause Analysis: The FV_REVERSION_EXIT Disaster
+
+> [!CAUTION]
+> `FV_REVERSION_EXIT=True` is the **#1 killer** of bot profitability.
+
+**What happens:**
+- Bot enters a position
+- Fair Value probability "flickers" slightly (normal market noise)
+- Bot interprets this as signal decay → panic sells immediately
+- Realizes spread loss → re-enters → repeats
+
+**Result:** "Death by a thousand cuts" - paying spread to market makers repeatedly without ever capturing the trend.
+
+**Evidence from trades:**
+- `hybrid_exits` at 21:10:39: Entered short at 0.26, exited at 0.25 (loss), re-entered, exited at 0.24 (another loss) - all within milliseconds
+- `let_winners_run` in same conditions: Held through noise, achieved +20.6% and +24.4% profits
+
+---
+
+### 3. The "Sweet Spot" Conditions
+
+**When the bot consistently WINS:**
+```
+binance_ofi_amp   > 1.03   (Whale backing)
+price_velocity_amp > 1.005  (Price accelerating)
+final_vote        > 1.05   (High conviction)
+```
+
+**When the bot consistently LOSES:**
+- Low edge entries (< 0.5%) → trading noise
+- Counter-trend "knife catching" → buying support during crashes
+- Hyper-sensitive exits → panic on normal fluctuations
+
+---
+
+### 4. Optimal Configuration: "Velocity Trend Rider"
+
+NotebookLM synthesized the following optimal configuration based on all A/B test data:
+
+```python
+OPTIMAL_CONFIG = {
+    "config_name": "velocity_trend_rider",
+    
+    # STRATEGY SELECTION
+    "enabled_strategies": [
+        "price_velocity",   # Detects 3-6s price bursts (The Spark)
+        "binance_ofi",      # Confirms whale liquidity (The Fuel)
+        "vol_regime"        # Prevents choppy market trades (Safety)
+    ],
+
+    # PARAMETERS
+    "BUY_ENTRY_EDGE": 0.008,        # 0.8% - Filters noise
+    "ENTRY_AMP_THRESHOLD": 1.04,    # ~4% combined conviction
+    "MAX_ENTRY_EDGE": 0.025,        # 2.5% - Pay spread for velocity
+    
+    "TAKE_PROFIT_1": 15.0,          # Capture fat tail
+    "TAKE_PROFIT_2": 25.0,          # Secondary target
+    "STOP_LOSS_PCT": -25.0,         # Wide stop, avoid noise
+    
+    "FV_REVERSION_EXIT": False      # CRITICAL: Disable panic exits
+}
+```
+
+---
+
+## Strategic Insights
+
+### Philosophy: "Speed Demon" > "Knife Catcher"
+The bot excels when it:
+- Rides momentum verified by whale order flow
+- Uses velocity as the primary trigger
+- Holds positions through minor fluctuations
+
+The bot fails when it:
+- Tries to catch falling knives (buying dips during crashes)
+- Over-trades on low-edge signals
+- Exits too early on signal noise
+
+### The Winning Formula
+```
+Signal Quality > Trade Volume
+```
+Fewer, higher-conviction trades outperform high-frequency noise trading.
+
+---
+
+## Recommended Actions
+
+> [!IMPORTANT]
+> These are recommendations from NotebookLM analysis. User approval required before implementation.
+
+1. **Immediately disable** `FV_REVERSION_EXIT` in production
+2. **Increase** `BUY_ENTRY_EDGE` from 0.5% to 0.8%+ to filter noise
+3. **Adopt** the `let_winners_run` exit logic (TP 15%+)
+4. **Disable** `aggressive_entries` configuration entirely
+5. **Consider** implementing the "Velocity Trend Rider" hybrid config
+
+---
+
+## Session Recordings
+
+The following browser recordings document the NotebookLM analysis:
+
+![NotebookLM Analysis Screenshot](C:/Users/rovie segubre/.gemini/antigravity/brain/6d23d5cf-6064-4f4b-ac60-9703e6bcfe68/.system_generated/click_feedback/click_feedback_1769764406002.png)

@@ -1,0 +1,50 @@
+# Improve Riddle Segmentation & Display (Multi-LLM Style + Vision)
+
+The goal is to modernize the dormant [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py) logic, implement a "Multi-LLM Debate" visual style, and **add visual awareness** to the solving personas.
+
+## User Review Required
+
+> [!NOTE]
+> **Vision Integration**: I will add a `describe_image` capability to the AI Analyzer.
+> - If you use **Ollama**, please ensure you have a vision-capable model (like `llava` or `moondream`) pulled, or map the `VISUAL_MODEL` env var to it.
+> - If no vision model is found, the system will fall back to "No visual context available" (personas will rely on text).
+
+## Proposed Changes
+
+### Core Utilities
+#### [MODIFY] [ffmpeg_utils.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/ffmpeg_utils.py)
+- **New Function**: `extract_frame(video_path, timestamp, output_path)`
+    - Extracts a single JPEG frame at the given timestamp for analysis.
+
+### AI & Logic (`src/clipper/processing`)
+
+#### [MODIFY] [analyze.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/analyze.py)
+- **Base Interface**: Add `describe_image(self, image_path: str) -> str`.
+- **Implementations**:
+    - `AnalyzerStub`: Returns "Stub description of image."
+    - `AIAnalyzerWithOllama`: If `llava`/`moondream` is available, use it to generate a description. Otherwise, return fallback.
+
+#### [MODIFY] [riddle_segment.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/riddle_segment.py)
+- **Visual Extraction**: 
+    - Inside `find_riddle_segments`, extract a frame from the middle of the question.
+    - Call `self.llm.describe_image(frame)`.
+- **Prompt Update**:
+    - Inject the visual description into the `_generate_persona_answers` prompt:
+      `Riddle: "..."\nVisual Context: "A red box is visible..."\nGenerate 3 answers...`
+
+#### [MODIFY] [shorts_render.py](file:///c:/Users/rovie%20segubre/clipper/src/clipper/processing/shorts_render.py)
+- No major changes needed, just ensure it renders the personas (which will now have smarter text).
+
+### Configuration
+- Add `VISUAL_MODEL` (default: `llava`) to config sources.
+
+## Verification Plan
+
+### Automated Tests
+- **Test**: `tests/test_analyze_vision.py`
+    - Verify `describe_image` works with the Stub and fails gracefully on text-only models.
+
+### Manual Verification
+1.  **Vision Check**:
+    - Run the verification script with a video that *requires* vision (e.g., "What color is this?").
+    - Ensure the personas reference the color/object in their generated text.

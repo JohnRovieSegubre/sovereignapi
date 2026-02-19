@@ -1,0 +1,220 @@
+# A/B Testing Implementation Plan
+
+## Goal
+
+Create a simulated A/B testing framework that:
+1. **Tracks** what each strategy would have done at every trade opportunity
+2. **Documents** all decisions with detailed logging
+3. **Calculates** hypothetical P&L for each strategy configuration
+4. **Reports** comparative performance metrics
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         MAIN BOT LOOP                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  1. Fetch market data (price, candles, order book)                 │
+│  2. Calculate BASE fair values (same for all)                      │
+│                                                                     │
+│  3. ┌─────────────────────────────────────────────────────────┐    │
+│     │ StrategyABTester.evaluate_all_strategies()              │    │
+│     ├─────────────────────────────────────────────────────────┤    │
+│     │ For each strategy config:                               │    │
+│     │   • Calculate amplification with ONLY that strategy     │    │
+│     │   • Determine trade signal (BUY_UP/BUY_DOWN/HOLD)       │    │
+│     │   • Log decision with all inputs                        │    │
+│     │   • Update virtual position if signal triggered         │    │
+│     │   • Track hypothetical P&L                              │    │
+│     └─────────────────────────────────────────────────────────┘    │
+│                                                                     │
+│  4. Execute REAL trade using active config (e.g., all combined)    │
+│                                                                     │
+│  5. Every N minutes: Print summary report                          │
+│  6. On shutdown: Save full results to JSON                         │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Strategy Configurations to Test
+
+| Config Name | Strategies Enabled | Description |
+|-------------|-------------------|-------------|
+| `baseline` | None | No amplification (pure fair value) |
+| [momentum](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#1721-1748) | Momentum only | MACD, Stochastic, ROC |
+| [velocity](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#226-330) | Price Velocity only | Speed & acceleration |
+| [binance_ofi](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py#724-780) | Binance OFI only | BTC order book imbalance |
+| [volume](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#846-960) | Volume Profile only | Volume percentile |
+| [obv](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/amplification_strategies.py#2713-2832) | OBV Divergence only | Price-volume divergence |
+| `combined_top3` | Top 3 performers | After testing, combine winners |
+| [all](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/allowance_utils.py#64-74) | All strategies | Current production config |
+
+---
+
+## Documentation System
+
+### 1. Real-Time Console Logging
+
+```
+[2026-01-28 01:30:00] ═══ A/B TEST EVALUATION ═══
+  Market: will-btc-be-above-105000
+  BTC Price: $105,234.50
+  Base FV: UP=0.62, DOWN=0.38
+  Best Ask: UP=$0.58, DOWN=$0.40
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │ Strategy      │ Amp UP │ Amp DN │ Signal    │ Virtual P&L  │
+  ├───────────────┼────────┼────────┼───────────┼──────────────┤
+  │ baseline      │ 1.000  │ 1.000  │ BUY_UP    │ +$12.30      │
+  │ momentum      │ 1.082  │ 0.965  │ BUY_UP    │ +$28.50  ★   │
+  │ velocity      │ 1.045  │ 0.980  │ BUY_UP    │ +$18.20      │
+  │ binance_ofi   │ 0.970  │ 1.035  │ HOLD      │ -$2.10       │
+  │ volume        │ 1.030  │ 1.000  │ BUY_UP    │ +$15.40      │
+  │ obv           │ 1.055  │ 0.960  │ BUY_UP    │ +$22.80      │
+  │ all_combined  │ 1.120  │ 0.920  │ BUY_UP    │ +$31.20  ★★  │
+  └─────────────────────────────────────────────────────────────┘
+  
+  Real Trade: BUY_UP executed @ $0.58
+```
+
+### 2. JSON Log File (`ab_test_log.json`)
+
+```json
+{
+  "session_start": "2026-01-28T01:30:00Z",
+  "evaluations": [
+    {
+      "timestamp": "2026-01-28T01:30:00Z",
+      "market_slug": "will-btc-be-above-105000",
+      "btc_price": 105234.50,
+      "base_fair_value": {"up": 0.62, "down": 0.38},
+      "market_prices": {"ask_up": 0.58, "ask_down": 0.40},
+      "strategies": {
+        "baseline": {
+          "amp_up": 1.0,
+          "amp_down": 1.0,
+          "amplified_fv": {"up": 0.62, "down": 0.38},
+          "signal": "BUY_UP",
+          "edge": 0.04,
+          "virtual_trade": {"action": "BUY", "side": "UP", "price": 0.58}
+        },
+        "momentum": {
+          "amp_up": 1.082,
+          "amp_down": 0.965,
+          "amplified_fv": {"up": 0.67, "down": 0.37},
+          "signal": "BUY_UP",
+          "edge": 0.09,
+          "details": {
+            "macd": 0.0023,
+            "stoch_k": 72.5,
+            "roc": 0.15
+          }
+        }
+        // ... other strategies
+      },
+      "real_trade": {"action": "BUY", "side": "UP", "price": 0.58}
+    }
+  ],
+  "virtual_positions": {
+    "baseline": {"up": 5.2, "down": 0, "pnl": 12.30},
+    "momentum": {"up": 3.1, "down": 0, "pnl": 28.50}
+    // ...
+  }
+}
+```
+
+### 3. Periodic Summary Report (Every 30 Minutes)
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║              A/B TEST SUMMARY (Last 30 min)                      ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Strategy       │ Trades │ Win % │ Hypothetical P&L │ Sharpe     ║
+╠────────────────┼────────┼───────┼──────────────────┼────────────╣
+║ baseline       │   4    │ 50.0% │      +$2.30      │   0.45     ║
+║ momentum       │   3    │ 66.7% │     +$15.20  ★   │   1.82     ║
+║ velocity       │   5    │ 60.0% │      +$8.50      │   1.12     ║
+║ binance_ofi    │   6    │ 33.3% │      -$4.20      │  -0.31     ║
+║ volume         │   3    │ 66.7% │      +$6.80      │   0.95     ║
+║ obv            │   2    │100.0% │      +$9.10  ★   │   1.35     ║
+║ all_combined   │   5    │ 60.0% │     +$11.40      │   0.88     ║
+╠══════════════════════════════════════════════════════════════════╣
+║ BEST PERFORMER: momentum (+$15.20, Sharpe 1.82)                  ║
+║ WORST PERFORMER: binance_ofi (-$4.20, Sharpe -0.31)              ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## Proposed Changes
+
+### [NEW] `strategy_ab_tester.py`
+
+New module containing:
+- `StrategyABTester` class
+- Strategy configuration definitions
+- Virtual position tracking
+- P&L calculation for hypothetical trades
+- Logging and reporting functions
+
+### [MODIFY] [main_bot_optimized.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/main_bot_optimized.py)
+
+- Import and initialize `StrategyABTester`
+- Call `ab_tester.evaluate_all_strategies()` at each trade opportunity
+- Pass market data, fair values, and order book
+- Call `ab_tester.print_summary()` periodically
+
+### [MODIFY] [config.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/config.py)
+
+Add settings:
+```python
+# A/B Testing Configuration
+AB_TEST_ENABLED: bool = True
+AB_TEST_LOG_FILE: str = "ab_test_log.json"
+AB_TEST_SUMMARY_INTERVAL_MINUTES: int = 30
+AB_TEST_VIRTUAL_TRADE_SIZE: float = 2.0  # USDC per virtual trade
+```
+
+### [NEW] `ab_test_results/` directory
+
+Store JSON logs and reports for each session.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Unit tests for `StrategyABTester` class
+- Verify virtual P&L calculations are correct
+- Verify JSON logging format
+
+### Manual Verification
+- Run bot in test mode for 1 hour
+- Verify console output shows strategy comparisons
+- Verify `ab_test_log.json` is created and contains expected data
+- Check that periodic summaries appear
+
+---
+
+## Timeline
+
+1. **Create `strategy_ab_tester.py`** (~10 min)
+2. **Add config settings** (~2 min)
+3. **Integrate into main bot** (~10 min)
+4. **Test with [run_test_mode.bat](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/run_test_mode.bat)** (~5 min)
+5. **Review output and adjust** (~5 min)
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> Before proceeding, please confirm:
+> 1. Is the logging format clear enough for your analysis needs?
+> 2. Do you want any additional strategies or strategy combinations tested?
+> 3. Should the virtual trade size match your real `TRADE_SIZE` or be different?

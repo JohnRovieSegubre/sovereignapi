@@ -1,0 +1,42 @@
+# RFC: The Machine-First Economy (Sovereign Compute Protocol)
+
+**Source:** Gemini (AI Economy)
+**Status:** Approved Strategy
+**Identity Layer:** Bitcoin/Lightning (L402)
+
+## 1. Core Architecture
+A four-layer stack for autonomous agents to trade compute resources.
+
+1.  **Identity/Wallet Layer:** 
+    *   **Protocol:** Bitcoin Lightning Network (L402).
+    *   **Rationale:** Micro-payments (<$0.01) + Identity via Public Key.
+    *   **Implementation (Phase 1):** Alby API (Wallet-as-a-Service).
+    *   **Implementation (Phase 2):** Greenlight / Self-Hosted LND.
+    *   **Auth:** `LSAT` (Lightning Service Authentication Token).
+
+2.  **Gateway Layer (Headless):**
+    *   The entry point for "Dropshipping" intelligence.
+    *   No UI. Pure API.
+3.  **Router Layer:**
+    *   Dynamically switches providers (e.g., Llama-3 vs DeepSeek) based on:
+        *   Price (Arbitrage).
+        *   Latency.
+        *   Complexity.
+4.  **Source Layer:**
+    *   The raw compute providers (Ollama, OpenRouter, AWS).
+
+## 2. Interaction Protocol
+1.  **Discovery:** Agent broadcasts capabilities ("I can analyze charts for 1 sat").
+2.  **Handshake:** L402 Payment Request (Macaroon + Invoice).
+3.  **Consumption:** Service delivery upon preimage proof.
+
+## 3. Agent Kernel Requirements
+The "Antigravity Monitor" needs a **Wallet-Client Module**.
+*   **Provider:** Alby API (https://getalby.com/developer).
+*   **Functions:**
+    *   `create_invoice(amount, memo)` -> `bolt11`
+    *   `pay_invoice(bolt11)` -> `preimage`
+    *   `get_balance()` -> `sats`
+
+## 4. Economic Goal
+**Arbitrage:** Buy cheap compute (Models), sell high-value insight (Reports).

@@ -1,0 +1,42 @@
+# Implementation Plan - Comic/Manga Panel Animation System
+
+## Goal Description
+Create a system that animates "in-between" motion for two comic/manga panels showing the same character in different poses. The system should be deterministic and preserve character identity.
+
+## User Review Required
+- **GPU Requirements**: The system utilizes SAM and potentially Diffusion models, requiring a CUDA-capable GPU for reasonable performance.
+- **Model Weights**: The user will need to download SAM checkpoints (e.g., `sam_vit_h.pth` or `sam_vit_b.pth`) manually or via a script we provide.
+
+## Proposed Changes
+
+### Project Structure
+Structure the project as a modular Python package/scripts.
+
+#### [NEW] `requirements.txt`
+List dependencies: `opencv-python`, `numpy`, `mediapipe`, `segment-anything`, `scikit-image`, `torch`, `torchvision`.
+
+#### [NEW] `src/pipeline/`
+- `preprocessing.py`: Image loading, resizing, padding.
+- `segmentation.py`: Wrapper around Segment Anything Model.
+- `keypoints.py`: Wrapper around MediaPipe Pose.
+- `interpolation.py`: Logic for interpolating keypoints (Bezier/Cubic).
+- `warping.py`: Delaunay triangulation and affine transforms.
+- `rendering.py`: Compositing and video export.
+
+#### [NEW] `src/utils/`
+- `visualization.py`: Helpers to draw skeletons, masks, and debug frames.
+- `io.py`: File handling.
+
+#### [NEW] `main.py`
+CLI entry point to run the pipeline on a pair of images.
+
+## Verification Plan
+
+### Automated Tests
+- **Unit Tests**: Test interpolation logic (start=0, end=1, t=0.5 => 0.5).
+- **Integration**: Run the full pipeline on a dummy "stick figure" image pair to verify no crashes.
+
+### Manual Verification
+- **Skeleton Check**: Verify the intermediate skeletons look natural for a set of test panel pairs.
+- **Warp Check**: Visual inspection of the warped frames for tearing or massive distortion.
+- **Video Playback**: reliable export of MP4 files.

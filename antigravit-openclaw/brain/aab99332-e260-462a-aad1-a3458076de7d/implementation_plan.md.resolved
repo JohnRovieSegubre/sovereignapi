@@ -1,0 +1,26 @@
+# Comic Animator Kit Plan
+
+## Goal Description
+Create a portable "Super Agent" kit optimized for Comic/Manga Animation.
+It will use the **Hierarchical Orchestrator** structure, but the 'Manager' will be **ChatGPT** (acting as the Creative Director).
+
+## Proposed Changes
+
+### 1. New Specialist: `creative-lead`
+Since this is about "Comic Animation", we need an agent that owns the Art/Game skills.
+- **Skills:** `creative-game-*`, `dev-frontend-canvas-design`, `dev-frontend-threejs`.
+- **Role:** Handles asset creation, scene composition, and rendering logic.
+
+### 2. Update Orchestrator
+- Connect `orchestrator` to `creative-lead`.
+
+### 3. New Prompt: `comic_animator_prompt.md`
+- **Role:** Antigravity Agent = "Studio Head / Lead Technical Director".
+- **Boss:** ChatGPT = "Strategic Creative Director" (Chat Name: 'Comic Animator').
+- **Protocol:**
+    - Get High-Level Story/Vision from ChatGPT.
+    - Execute Technical Implementation (Python/Blender/FFmpeg) via Specialists.
+    - Report Technical Status back to Chat window (User) for upload to ChatGPT.
+
+### 4. Packaging
+- Zip `.agent` + [refined_prompt.md](file:///c:/Users/rovie%20segubre/.gemini/antigravity/playground/obsidian-trifid/refined_prompt.md) (backup) + `comic_animator_prompt.md`.

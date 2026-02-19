@@ -1,0 +1,98 @@
+# Future A/B Test Concepts: Deep Dive 🌊
+
+This document expands on the "Strategy + Parameter" combinations. The goal is to maximize the specific strength of each strategy by pairing it with an execution style that matches its "personality."
+
+---
+
+## 🔒 1. "The Whale Watcher" (Sniper Configuration)
+**Core Strategy:** `binance_ofi` + `volume_profile`
+**Personality:** Patient, defensive, high-precision.
+
+### The Logic
+Market Makers leave "footprints" in the order book (walls of liquidity).
+*   **Current Problem:** Our default `BUY_ENTRY_EDGE` (0.75%) is too loose. We often enter when the "wall" is thin.
+*   **The Fix:** We wait for a **Massive Imbalance** (>20% difference) at a verified **Volume Node**.
+*   **Why it works:** The huge limit orders act as a physical barrier, protecting our trade from going against us. We can afford tight stops because if that wall breaks, the trade is invalid immediately.
+
+### configuration Sketch
+*   **Strategies:** `binance_ofi=True`, `volume_profile=True` (Others OFF)
+*   **Parameters:**
+    *   `ENTRY_AMP_THRESHOLD`: **1.15** (Only trade if signal is +15% stronger than fair value)
+    *   `MAX_ENTRY_EDGE`: **0.02** (We pay up for quality)
+    *   `STOP_LOSS_PCT`: **-15%** (Tight stop - relying on the wall)
+
+---
+
+## ⚡ 2. "The Scalper" (Speed Demon)
+**Core Strategy:** `price_velocity` + `binance_ofi`
+**Personality:** Aggressive, fast, chaotic.
+
+### The Logic
+Price Velocity detects "Burst Movements" (0-5 minutes). These moves are explosive but short-lived.
+*   **Current Problem:** Our conservative `MAX_ENTRY_EDGE` (1.5%) often blocks us from entering fast moves because the spread widens during volatility. By the time the spread tightens, the move is over.
+*   **The Fix:** We accept **Slippage**. We pay a higher spread (up to 3.5%) to guarantee we catch the momentum train before it leaves the station. We exit quickly (scalp).
+
+### Configuration Sketch
+*   **Strategies:** `price_velocity=True`, `binance_ofi=True`
+*   **Parameters:**
+    *   `Buy Entry Edge`: **0.005** (Low barrier to entry)
+    *   `MAX_ENTRY_EDGE`: **0.035** (Allow entering even with 3.5% spread/fee impact)
+    *   `TAKE_PROFIT_1`: **8%** (Take money fast)
+    *   `TAKE_PROFIT_ALL`: **True** (No runners)
+
+---
+
+## 🏹 3. "The Trend Hunter" (Home Run Hitter)
+**Core Strategy:** `momentum` (MACD/Stoch) + `obv_divergence`
+**Personality:** Slow, wide, confident.
+
+### The Logic
+Momentum strategies track the "Meat of the Move" (15m - 1h).
+*   **Current Problem:** Binary Options often fluctuate -40% to +40% within a single 15m candle due to time decay and noise. Our default -30% stop gets hit constantly by noise, kicking us out of winning trends.
+*   **The Fix:** **Wide Stops + High Targets.** We accept that the option price will swing wildly. We give it room (-60% stop) to survive the noise, targeting a +80-100% payoff.
+
+### Configuration Sketch
+*   **Strategies:** `momentum=True`, `obv_divergence=True`
+*   **Parameters:**
+    *   `STOP_LOSS_PCT`: **-60%** (Survival Mode)
+    *   `TAKE_PROFIT_1`: **40%** (Aim high)
+    *   `TAKE_PROFIT_2`: **80%**
+    *   `TRAILING_STOP_DISTANCE`: **15%** (Don't choke the trade)
+
+---
+
+## 🔄 4. "The Mean Reverter" (The Contrarian)
+**Core Strategy:** `stochastic` + `volume_profile`
+**Personality:** Counter-puncher, buys fear, sells greed.
+
+### The Logic
+Most of our strategies follow the trend. But 70% of the time, markets range (chop).
+*   **The Fix:** We identify the "Edges" of the range using Volume Nodes and Overbought/Oversold signals. We fade the move (bet against it).
+
+### Configuration Sketch
+*   **Strategies:** `stochastic` (requires code tweak to isolate), `volume_profile`
+*   **Logic:** Setup a config that *inverses* the signal? (Advanced)
+    *   *Simpler approach:* Just tighten the `rubber_band` logic.
+*   **Parameters:**
+    *   `RSI_OVERSOLD`: **25** (Extreme fear)
+    *   `RSI_OVERBOUGHT`: **75** (Extreme greed)
+    *   `RUBBER_BAND_COOLDOWN`: **30s** (Re-enter fast)
+
+---
+
+## 🧠 The "Regime Theory" (Endgame)
+
+Once we validate these 4 archetypes, the final bot logic becomes:
+
+```python
+if volatility == "EXPLOSIVE":
+    activate("The Scalper")
+elif volatility == "TRENDING":
+    activate("The Trend Hunter")
+elif volatility == "CHOPPY":
+    activate("The Mean Reverter")
+elif market == "QUIET":
+    activate("The Whale Watcher")
+```
+
+This is dynamic, regime-based trading. The A/B test is just the training ground to build these specialists. 🏟️

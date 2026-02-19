@@ -1,0 +1,50 @@
+# 24/7 Antigravity System Guide
+
+This guide explains how your local AI agent works and how to run it effectively.
+
+## System Architecture
+
+The system consists of three main components that work together:
+
+1.  **The Gateway (`gateway_server.py`)**
+    -   **Role:** This is the "brain" of the operation. It acts as a local API server (compatible with OpenAI's format).
+    -   **Function:** It routes your requests to powerful AI models (via OpenRouter) or handles them locally. It also manages "payment" logic (simulated or real via Alby) to track usage.
+    -   **Location:** `agent/gateway_server.py`
+
+2.  **The Monitor (`antigravity_monitor.py`)**
+    -   **Role:** This is the "hands" of the agent. It runs in the background and watches a specific folder (`.agent/inbox`).
+    -   **Function:** When it sees a new task file in the inbox, it reads instructions and executes them. It can run shell commands, python scripts, and even "wake up" the user by popping up a message window if critical attention is needed.
+    -   **Location:** `agent/scripts/antigravity_monitor.py`
+
+3.  **The Watchdog (`watchdog.py`)**
+    -   **Role:** This is the "guardian".
+    -   **Function:** It ensures the Monitor stays alive. If the Monitor sends an error or crashes, the Watchdog restarts it automatically and logs the incident. This ensures true 24/7 operation.
+    -   **Location:** `agent/scripts/watchdog.py`
+
+## How it Workflow
+
+1.  **Start the System:**
+    -   Double-click `START_MONITOR.bat`.
+    -   This launches the **Watchdog**, which subsequently launches the **Monitor**.
+    -   You will see a terminal window confirming the system is active.
+
+2.  **Task Injection:**
+    -   The system acts on *files*. To make the agent do something, you (or another AI script) drop a markdown file into `.agent/inbox`.
+    -   The Monitor picks it up, executes the `RUN:` commands inside, and moves the file to `.agent/inbox/completed`.
+
+3.  **The Gateway:**
+    -   You can run `python gateway_server.py` in a separate terminal to start the API server.
+    -   Your other scripts (like the Moltbook scripts) talk to this local server to get AI intelligence.
+
+## Recent Fixes
+
+I have successfully migrated the codebase to your new `agent` folder. 
+**13 files** were updated to remove hardcoded paths (e.g., `c:\...\obsidian-trifid`) and replace them with dynamic paths. 
+
+**This means:**
+-   You can move this `agent` folder anywhere, and it will still work.
+-   The secrets/tokens are looked for in `.agent/secure` relative to the scripts.
+
+## How to Apply
+1.  **Ensure you have your secrets:** Make sure `alby_token.json` and `moltbook_credentials.json` are inside `.agent/secure`.
+2.  **Run:** Double-click `START_MONITOR.bat` to go live.

@@ -1,0 +1,34 @@
+# Final Phase: Real-World Simulation & Optimization
+
+## Goal
+Conduct a final, high-fidelity test by simulating real-world latency/slippage costs and deploying "Best of Breed" hybrid configurations.
+
+## 1. Real-World Simulation (Global Slippage)
+**Problem:** Previous tests assumed instant, perfect execution. In reality, latency = slippage.
+**Solution:** Inject a global `SLIPPAGE_PENALTY` into the A/B tester.
+- **Penalty:** 0.05% per trade (approx $0.25 on $500 trade) mimicking spread + 1 sec latency.
+- **Implementation:** Modify [_execute_virtual_trade](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py#1207-1261) and [_check_virtual_exits](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py#1262-1346) to worsen prices.
+
+```python
+# In strategy_ab_tester.py
+SLIPPAGE_PCT = 0.0005 # 0.05%
+# Entry: price * (1 + slippage) for long
+# Exit: price * (1 - slippage) for long
+```
+
+## 2. Final Configs (The "Best of Breed")
+
+### A. `trend_sniper` (Hybrid: Scalper Entry + Trend Exit)
+Combines the high win-rate entry of `scalper_combo` (Phase 1 Winner) with the profitability of `let_winners_run` (Phase 2 Winner).
+- **Entry:** Velocity + OFI + 0.8% Edge (High Conviction)
+- **Exit:** 15% / 25% TP, Wide Stops, NO FV Reversion.
+
+### B. `pure_trend_v2` (Optimization: Filtered Trend Following)
+Improves the profitable `let_winners_run` by adding a Volatility Regime filter to avoid choppy markets.
+- **Base:** `let_winners_run`
+- **Add:** `vol_regime` filter enabled.
+
+## Execution Plan
+1.  **Modify Core:** Update [strategy_ab_tester.py](file:///c:/Users/rovie%20segubre/btc_15min_options_bot/strategy_ab_tester.py) to handle slippage.
+2.  **Add Configs:** Inject `trend_sniper` and `pure_trend_v2`.
+3.  **Deploy:** Stop bot, clear logs, restart A/B test.

@@ -1,0 +1,47 @@
+# Gateway Ecosystem Map
+
+This document maps every file related to the **Sovereign Gateway** concept, categorized by their role in the system.
+
+## 1. The Core (The Gateway Itself)
+These files **ARE** the gateway.
+-   **[agent/gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py)**  
+    *The Server.* Listens on port 8000. Handles L402 payments and OpenRouter forwarding.
+-   **[agent/wallet_client.py](file:///c:/Users/rovie%20segubre/agent/wallet_client.py)**  
+    *The Reference Client.* Defines the protocol for negotiating payment and buying compute.
+
+## 2. Infrastructure (The Runtime)
+These files **RUN** the gateway and keep it alive 24/7.
+-   **[agent/START_MONITOR.bat](file:///c:/Users/rovie%20segubre/agent/START_MONITOR.bat)**  
+    *The Launcher.* The entry point for the user.
+-   **[agent/scripts/watchdog.py](file:///c:/Users/rovie%20segubre/agent/scripts/watchdog.py)**  
+    *The Guardian.* Runs a loop to restart the system if it crashes.
+-   **[agent/scripts/antigravity_monitor.py](file:///c:/Users/rovie%20segubre/agent/scripts/antigravity_monitor.py)**  
+    *The Body.* The agent process that runs alongside the gateway. While it doesn't *host* the gateway, it shares the same lifecycle and "Sovereign Node" identity.
+
+## 3. Financial & Integration Utilities
+These files verify the **Money** (Alby/Lightning) aspect of the gateway.
+-   **[agent/scripts/verify_alby.py](file:///c:/Users/rovie%20segubre/agent/scripts/verify_alby.py)**  
+     Checks if the Alby token is valid.
+-   **[agent/scripts/test_invoice_generation.py](file:///c:/Users/rovie%20segubre/agent/scripts/test_invoice_generation.py)**  
+    Tests if the agent can generate a Lightning invoice (essential for the Gateway's L402 paywall).
+
+## 4. The "Agency" (Clients & Future Use Cases)
+These files currently talk to external APIs but are the intended **Consumers** of the Gateway. Ideally, they should be refactored to use `localhost:8000` to gain sovereignty and privacy.
+-   **[agent/moltbook_explore.py](file:///c:/Users/rovie%20segubre/agent/moltbook_explore.py)** (Reads social posts)
+-   **[agent/post_moltbook.py](file:///c:/Users/rovie%20segubre/agent/post_moltbook.py)** (Posts content)
+-   **[agent/post_and_verify_moltbook.py](file:///c:/Users/rovie%20segubre/agent/post_and_verify_moltbook.py)** (Posts + Math Challenge)
+-   **[agent/check_moltbook_status.py](file:///c:/Users/rovie%20segubre/agent/check_moltbook_status.py)** (Checks agent status)
+-   **[agent/create_submolt.py](file:///c:/Users/rovie%20segubre/agent/create_submolt.py)** (Creates communities)
+-   **[agent/list_moltbook_submolts.py](file:///c:/Users/rovie%20segubre/agent/list_moltbook_submolts.py)** (Lists communities)
+-   **[agent/debug_moltbook_raw.py](file:///c:/Users/rovie%20segubre/agent/debug_moltbook_raw.py)** (Raw API debugging)
+
+## 5. Configuration & Secrets
+-   **`agent/.agent/secure/openrouter_key.json`** (AI Provider Key)
+-   **`agent/.agent/secure/alby_token.json`** (Wallet Key)
+-   **`agent/.agent/secure/moltbook_credentials.json`** (Agency Identity)
+
+## Summary of Logic Flow
+1.  **Infrastructure** (`watchdog`) keeps the system running.
+2.  **Core** (`gateway`) provides the Intelligence API + Payment Gate.
+3.  **Financials** (`verify_alby`) ensure the Payment Gate works.
+4.  **Agency** (`moltbook_*`) scripts *should* call the **Core** to generate their content, paying via the **Financials**.

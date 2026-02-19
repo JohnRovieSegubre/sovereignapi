@@ -1,0 +1,55 @@
+# A/B Test Results Analysis - 12 Hour Run
+
+## Test Parameters
+- **Duration:** ~12 hours (2026-01-30 04:25 - 16:15)
+- **Configurations Tested:** 27 (including new `velocity_trend_rider`)
+- **Data Points:** 11,876 strategy vote rows
+
+---
+
+## 🏆 Key Findings: New Configs Performance
+
+### ✅ WINNERS (Profitable)
+
+| Config | P&L | Win Rate | Trades | Notes |
+|:-------|:----|:---------|:-------|:------|
+| **scalper_combo** | **+$0.87** | **78%** | 49 | **TOP PERFORMER!** Entry edge fix worked |
+| **velocity_trend_rider** | **+$0.76** | 65% | 49 | New NotebookLM config - PROFITABLE |
+| volume_plus_velocity | +$0.03 | 100% | 1 | Low activity |
+| volume_profile_only | +$0.03 | 100% | 1 | Low activity |
+
+### 🔧 FIX VALIDATION
+
+| Config | Old Win Rate | New Win Rate | Status |
+|:-------|:-------------|:-------------|:-------|
+| **hybrid_exits** | **5.7%** | **42%** | ✅ **FIX WORKED!** (+700% improvement) |
+| **scalper_combo** | ~60% | **78%** | ✅ Entry edge increase helped |
+
+### ❌ LOSERS (Confirming Prior Analysis)
+
+| Config | P&L | Win Rate | Trades | Issue |
+|:-------|:----|:---------|:-------|:------|
+| **aggressive_entries** | **-$22.44** | 68% | 105 | Over-trading noise (WORST) |
+| **fv_reversion_exit** | -$8.22 | 14% | 129 | Still using FV_REVERSION_EXIT=True |
+| wider_stops | -$6.38 | 75% | 40 | Stops too wide |
+
+---
+
+## 📊 Strategy Insights
+
+### What Worked
+1. **Entry Edge 0.8%** - Filtering noise is crucial. `scalper_combo` with increased edge became the top performer
+2. **Velocity + OFI combo** - Both `velocity_trend_rider` and `velocity_plus_binance_ofi` are profitable
+3. **Disabling FV_REVERSION_EXIT** - Massive improvement from 5.7% to 42% win rate
+
+### What Failed
+1. **Aggressive entries** - 105 trades but -$22 loss. High-frequency trading destroys capital via fees
+2. **FV reversion exits** - Even with 129 trades, only 14% win rate. Early exits kill profits
+
+---
+
+## Recommended Next Steps
+
+1. **Production candidate:** `scalper_combo` or `velocity_trend_rider`
+2. **Disable permanently:** `aggressive_entries`, `fv_reversion_exit`
+3. **Consider:** Combining `scalper_combo` entry logic with `let_winners_run` exit targets

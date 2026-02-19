@@ -1,0 +1,21 @@
+# Tasks
+
+- [x] Integrate `sickn33/antigravity-awesome-skills` <!-- id: 8 -->
+- [x] Optimize Orchestrator for 200+ Skills <!-- id: 15 -->
+- [x] Create 'Comic Animator' Super Kit <!-- id: 20 -->
+- [x] Deploy Kit to Scratch Directory <!-- id: 26 -->
+- [x] Integrate GitHub <!-- id: 31 -->
+- [x] Verify Comic Prompt Execution Flow <!-- id: 36 -->
+- [x] Research NotebookLM Integration <!-- id: 45 -->
+- [x] Research Google Docs Integration <!-- id: 48 -->
+    - [x] Search for Google Docs/Drive skills <!-- id: 49 -->
+    - [x] Verify capabilities and auth method <!-- id: 50 -->
+- [ ] Implement Always-On Monitor (Windows) <!-- id: 51 -->
+    - [ ] Create directory structure (.agent/inbox/*) <!-- id: 52 -->
+    - [ ] Write `scripts/antigravity_monitor.py` <!-- id: 53 -->
+    - [ ] Create `START_MONITOR.bat` <!-- id: 54 -->
+- [ ] Research & Join Moltbook <!-- id: 55 -->
+    - [ ] Read `https://moltbook.com/skill.md` <!-- id: 56 -->
+    - [ ] Analyze "AI-AI economy" concepts <!-- id: 57 -->
+    - [ ] Perform security audit for Moltbook instructions <!-- id: 58 -->
+    - [ ] Ask clarifying questions to user <!-- id: 59 -->

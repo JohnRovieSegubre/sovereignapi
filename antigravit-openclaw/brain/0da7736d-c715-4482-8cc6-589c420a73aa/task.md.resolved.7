@@ -1,0 +1,26 @@
+# Task List: Comic/Manga Panel Animation System
+
+- [/] Project Setup & Environment
+    - [x] Create project structure
+    - [x] Create requirements.txt
+    - [/] Create [src/config.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/config.py) for centralized params
+    - [/] Create [src/utils/io.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/utils/io.py) (logging, manifest) & [src/utils/visualization.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/utils/visualization.py)
+    - [/] Create `tests/` directory and initial pytest setup
+- [ ] Phase 1: Preprocessing & Assets
+    - [x] Script: Normalization & Panel Detection [preprocessing.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/tests/test_preprocessing.py) (idempotent, metadata)
+    - [ ] Script: Segmentation [segmentation.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/pipeline/segmentation.py) (SAM, strategies, fallbacks)
+    - [ ] Script: Keypoints [keypoints.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/tests/test_keypoints.py) (MediaPipe, normalization, fallback logic)
+    - [ ] Test: Unit tests for scaling/coords
+- [ ] Phase 2: Motion Planning & Validation
+    - [x] Script: Motion Planner [motion_planner.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/pipeline/motion_planner.py) (interpolation, constraints)
+    - [ ] Script: Debug visualization (Skeleton overlay, visual diffs)
+    - [ ] Test: Interpolation math tests
+- [ ] Phase 3: Frame Generation (MVP)
+    - [x] Script: Warping [warping.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/pipeline/warping.py) (Triangulation, barycentric, inpaint)
+    - [ ] Integration: Stick-figure end-to-end test
+- [ ] Phase 4: Refinement & Compositing
+    - [x] Script: Rendering & Compositing [rendering.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/pipeline/rendering.py) (FFmpeg, temporal smooth)
+    - [x] Pipeline: [main.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/main.py) CLI (args, seed, debug mode)
+- [x] Phase 5: Metrics & QA
+    - [x] Script: Automated metrics (SSIM, CLIP) [metrics.py](file:///C:/Users/rovie%20segubre/.gemini/antigravity/scratch/comic_animator/src/pipeline/metrics.py)
+    - [x] Docs: Write component documentation

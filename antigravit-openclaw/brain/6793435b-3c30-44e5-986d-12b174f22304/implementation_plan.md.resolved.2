@@ -1,0 +1,60 @@
+# Making Sovereign API Public-Ready
+
+## Security Audit Results
+
+> [!CAUTION]
+> The codebase currently **leaks personal infrastructure** via hardcoded defaults. These MUST be removed before any public release.
+
+| Issue | Severity | Files Affected |
+|:------|:---------|:---------------|
+| Hardcoded wallet `0xC8Dc...` | 🔴 Critical | 4 files |
+| Hardcoded server IP `34.55.175.24` | 🔴 Critical | 5 files |
+| Default unsafe secret `default_unsafe_secret_for_dev` | 🔴 Critical | gateway_server.py |
+| No [.gitignore](file:///c:/Users/rovie%20segubre/agent/.gitignore) | 🟡 High | Entire repo |
+| No `.env.example` | 🟡 High | Entire repo |
+
+---
+
+## Proposed Changes
+
+### Security Fixes
+
+#### [MODIFY] [sovereign.py](file:///c:/Users/rovie%20segubre/agent/sovereign_api/sdk/sovereign.py)
+- Remove hardcoded `34.55.175.24` default → require `GATEWAY_URL` env var
+- Remove hardcoded `0xC8Dc...` default → require `GATEWAY_WALLET` env var
+
+#### [MODIFY] [agent_customer.py](file:///c:/Users/rovie%20segubre/agent/sovereign_api/sdk/agent_customer.py)
+- Remove hardcoded IP and wallet defaults
+
+#### [MODIFY] [polygon_watcher.py](file:///c:/Users/rovie%20segubre/agent/sovereign_api/polygon_watcher.py)
+- Remove hardcoded `MY_WALLET_ADDRESS` → require env var
+
+#### [MODIFY] [gateway_server.py](file:///c:/Users/rovie%20segubre/agent/sovereign_api/gateway_server.py)
+- Remove `default_unsafe_secret_for_dev` fallback
+
+#### [MODIFY] [cloud_mint.py](file:///c:/Users/rovie%20segubre/agent/sovereign_api/cloud_mint.py)
+- Remove hardcoded IP
+
+#### [MODIFY] [deploy_to_cloud.ps1](file:///c:/Users/rovie%20segubre/agent/sovereign_api/deploy_to_cloud.ps1)
+- Remove hardcoded IP → use variable
+
+---
+
+### New Files
+
+#### [NEW] [.gitignore](file:///c:/Users/rovie%20segubre/agent/.gitignore)
+- Ignore `config/`, `*.json` secrets, `__pycache__`, `.env`
+
+#### [NEW] `.env.example`
+- Template showing all required environment variables
+
+#### [NEW] [README.md](file:///c:/Users/rovie%20segubre/agent/README.md) (rewrite)
+- Professional public README with setup instructions
+
+---
+
+## Verification Plan
+
+- `grep` for any remaining hardcoded IPs, wallets, or secrets
+- Confirm [.gitignore](file:///c:/Users/rovie%20segubre/agent/.gitignore) excludes sensitive files
+- Verify server still starts with env vars only

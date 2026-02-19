@@ -1,0 +1,16 @@
+# Full Body Manga Support Plan
+
+## Goals
+- Enable **Full Body** animation for manga sketches.
+- Address the "Anime Anatomy" problem where MediaPipe Pose fails on stylized limbs.
+
+## Strategy
+1.  **Configuration**: Switch `detection_mode` to `"pose"`.
+2.  **Raw-to-Norm**: Leverage the new detection pipeline we built for Face Mode. It detects on the raw image (high success rate) and mathematically transforms points. This is critical for Pose because scaling down often deletes thin manga limbs.
+3.  **Manual Override**: 
+    - Full body manga poses are often extreme (foreshortening).
+    - We will provide a `landmarks_override.json` schema.
+    - **Future**: A simple Python/Streamlit UI to let you click joints on an image and generate this JSON.
+    
+## Validation
+Run `scripts/verify_landmarks.py` with `--mode pose` on a full-body manga drawing.

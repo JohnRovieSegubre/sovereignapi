@@ -1,0 +1,36 @@
+# Sovereign AI Gateway Analysis
+
+## 1. The Core Idea
+The **Sovereign Gateway** is a piece of "Middleware" software designed to decouple your AI agents from direct dependency on big providers like OpenAI or Anthropic.
+
+Instead of your scripts calling `openai.com` directly, they call your local `localhost:8000`. 
+This gives you **Control**:
+-   **Model Swapping:** You can switch the backend from GPT-4 to Claude to Llama 3 just by changing one config file in the gateway, without touching your agent code.
+-   **Economics (L402):** The gateway is designed to charge "Micro-payments" (Satoshis) for every request. This allows you to build "Pay-per-use" agents or trade compute with other agents in the future.
+
+## 2. File Manifest
+These are the specific files that make the gateway run:
+
+### Core System
+-   **[agent/gateway_server.py](file:///c:/Users/rovie%20segubre/agent/gateway_server.py)**  
+    *The Brain.* A FastAPI server that listens on port 8000. It handles authentication, routing (sending requests to OpenRouter), and error handling.
+
+-   **[agent/wallet_client.py](file:///c:/Users/rovie%20segubre/agent/wallet_client.py)**  
+    *The Customer.* A sample script that demonstrates how to "buy" compute from the gateway. It handles the specific "L402" payment protocol (receive challenge -> sign -> retry).
+
+### Configuration & Secrets
+-   **`agent/.agent/secure/openrouter_key.json`**  
+    *The Fuel.* Contains the API key for OpenRouter, which acts as the upstream provider for the actual intelligence.
+-   **`agent/.agent/secure/alby_token.json`**  
+    *The Bank.* Contains the Alby (Lightning Wallet) token to generate real payment invoices (if enabled).
+
+## 3. How it Works (The Flow)
+
+1.  **Request:** An agent (Client) asks for AI: *"Hello, I need to solve a problem."* -> sends to `localhost:8000`.
+2.  **Challenge (402):** The Gateway says: *"Halt. You must pay 10 sats."* (Returns HTTP 402 Payment Required).
+3.  **Payment:** The Client pays the invoice (via Lightning Network).
+4.  **Token:** The Client gets a "Preimage" (proof of payment).
+5.  **Retry:** The Client asks again, this time attaching the proof: *"Hello, here is my receipt."*
+6.  **Service:** The Gateway verifies the receipt, forwards the request to **OpenRouter**, gets the AI response, and hands it back to the Client.
+
+*Current State:* The system currently has a **Developer Backdoor** enabled (`secret_proof_of_payment`) so you can test it without spending real money.

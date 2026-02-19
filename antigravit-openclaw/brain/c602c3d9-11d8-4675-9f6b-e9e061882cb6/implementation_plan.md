@@ -1,0 +1,34 @@
+# Implementation Plan - Project Consolidation
+
+## User Review Required
+> [!IMPORTANT]
+> **Legacy Code Removal**: I identified `file-upload-app` and `print-pod` as potential legacy/conflicting directories. I plan to move the `.env` file to the root and archive/remove these folders. Please confirm if `file-upload-app` contains any critical newer features I missed (it appears to use jQuery, while root uses modern fetch).
+
+> [!NOTE]
+> **Git Repository**: I am initializing a git repository at the root.
+
+## Proposed Changes
+
+### Root Directory
+#### [MODIFY] [server.js](file:///C:/Users/rovie%20segubre/Downloads/new/server.js)
+- Update `.env` path to load from root.
+- Ensure `upload` and `public` paths are correct relative to root.
+
+#### [NEW] [.env](file:///C:/Users/rovie%20segubre/Downloads/new/.env)
+- Moved from `file-upload-app/.env`.
+
+#### [DELETE] [file-upload-app](file:///C:/Users/rovie%20segubre/Downloads/new/file-upload-app)
+- Directory will be removed after `.env` migration.
+
+#### [DELETE] [print-pod](file:///C:/Users/rovie%20segubre/Downloads/new/print-pod)
+- Directory will be removed (duplicate package.json).
+
+## Verification Plan
+
+### Automated Tests
+- Run `npm start` to verify server launches.
+- Verify static file serving (access localhost:3000).
+
+### Manual Verification
+- **Upload Test**: Use the web UI to upload a sample PDF.
+- **Print Code Generation**: Verify a print code is returned.
