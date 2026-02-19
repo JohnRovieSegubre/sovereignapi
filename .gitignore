@@ -1,0 +1,39 @@
+# Security
+.agent/secure/
+*.json
+!package.json
+!skill.json
+
+# Temporary / Logs
+.agent/inbox/completed/
+.agent/inbox/failed/
+.agent/inbox/logs/
+.agent/inbox/*.md
+.agent/inbox/*.txt
+__pycache__/
+*.log
+
+# Editor
+.vscode/
+
+# Build Artifacts
+.next/
+dist/
+build/
+node_modules/
+.DS_Store
+coverage/
+*.pyc
+
+# Large Model Files (>2GB)
+
+antigravit-openclaw/scratch/comic_animator/manga-animator-ui/models/sam_vit_h_4b8939.pth
+
+# Large Model Files (>2GB)
+antigravit-openclaw/scratch/comic_animator/manga-animator-ui/models/sam_vit_h_4b8939.pth
+antigravit-openclaw/scratch/comic_animator/models/sam_vit_h_4b8939.pth
+
+# Browser Recordings
+**/browser_recordings/
+
+
