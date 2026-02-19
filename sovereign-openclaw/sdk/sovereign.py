@@ -138,17 +138,6 @@ class SovereignClient:
         except Exception as e:
             print(f"⚠️ Failed to save token: {e}")
 
-    class Chat:
-        def __init__(self, client):
-            self.client = client
-            self.completions = self.Completions(client)
-
-        class Completions:
-            def __init__(self, client):
-                self.client = client
-
-    # --- CORE METHODS ---
-
     def refuel_balance(self):
         """
         Attempts to refuel the balance (buy a macaroon).
@@ -178,7 +167,20 @@ class SovereignClient:
         tx = self._send_usdc(amount_usd=1.0)
         return self._claim_macaroon(tx)
 
-    def create(self, model, messages, max_retries=1, **kwargs):
+    class Chat:
+        def __init__(self, client):
+            self.client = client
+            self.completions = self.Completions(client)
+
+        class Completions:
+            def __init__(self, client):
+                self.client = client
+
+    # --- CORE METHODS ---
+
+
+
+            def create(self, model, messages, max_retries=1, **kwargs):
                 """
                 Send a chat request. Automatically pays if 402 is returned.
                 kwargs: Pass 'tools', 'tool_choice', 'max_tokens' etc.

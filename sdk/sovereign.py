@@ -117,6 +117,35 @@ class SovereignClient:
         print(f"   API Key: {self.api_key[:12]}..." if self.api_key else "   API Key: Not Set")
         print(f"   Mock Mode: {'ON' if self.mock_mode else 'OFF'}")
 
+    def refuel_balance(self):
+        """
+        Attempts to refuel the balance (buy a macaroon).
+        Supports x402 (Instant) and Legacy (Polygon TX + Watcher).
+        """
+        # 1. Try x402 (Base Sepolia / Coinbase CDP)
+        if self._has_x402_support():
+            print("⛽ Refueling via x402 (Instant)...")
+            try:
+                session = self._get_x402_session()
+                url = f"{self.base_url}/balance/topup"
+                resp = session.post(url, json={}, headers={"Content-Type": "application/json"}, timeout=120)
+                
+                if resp.status_code == 200:
+                    data = resp.json()
+                    self.token = data["token"]  # Auto-update token
+                    print(f"✅ Refueled! Credit: {data.get('credits_sats')} sats")
+                    return self.token
+                else:
+                    print(f"❌ x402 Refuel Failed: {resp.status_code} - {resp.text}")
+                    # Fallthrough to legacy
+            except Exception as e:
+                print(f"⚠️  x402 Refuel Error: {e}")
+        
+        # 2. Legacy Fallback (Polygon / Watcher)
+        print("⏳ Falling back to Legacy Refuel (Polygon)...")
+        tx = self._send_usdc(amount_usd=1.0)
+        return self._claim_macaroon(tx)
+
     class Chat:
         def __init__(self, client):
             self.client = client
@@ -125,6 +154,10 @@ class SovereignClient:
         class Completions:
             def __init__(self, client):
                 self.client = client
+
+            # --- CORE METHODS ---
+
+
 
             def create(self, model, messages, max_retries=1, **kwargs):
                 """
