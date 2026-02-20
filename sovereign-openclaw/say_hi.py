@@ -12,10 +12,14 @@ sys.path.append(str(agent_dir.parent))  # Add root agent dir
 # Load env variables
 load_dotenv(agent_dir / ".env")
 
-# Force Local Gateway for verification
-os.environ["GATEWAY_URL"] = "http://localhost:8000/v1"
+# Default to Local Gateway if not set
+if "GATEWAY_URL" not in os.environ:
+    os.environ["GATEWAY_URL"] = "http://localhost:8000/v1"
 
 from sdk.sovereign import SovereignClient
+import sdk
+print(f"DEBUG: Loaded SDK from {sdk.__file__}")
+print(f"DEBUG: Client Module: {SovereignClient.__module__}")
 
 def say_hi():
     print("🤖 Waking up Sovereign Client (x402 Edition)...")

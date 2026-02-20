@@ -45,7 +45,7 @@ except ImportError:
 
 # --- CONSTANTS ---
 # Standard USDC Contract on Polygon
-USDC_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e" # Base Sepolia
 
 # Minimal ABI for 'transfer'
 ERC20_ABI = [
@@ -97,7 +97,7 @@ class SovereignClient:
         
         self.gateway_wallet = gateway_wallet or os.getenv("GATEWAY_WALLET")
         self.rpc_url = rpc_url or os.getenv("POLYGON_RPC", "https://polygon-rpc.com")
-        self.private_key = private_key or os.getenv("AGENT_PRIVATE_KEY")
+        self.disable_gasless_relay = os.getenv("DISABLE_GASLESS_RELAY", "0") == "1"
         
         # Identity (only if private key provided)
         if self.private_key:
@@ -314,6 +314,8 @@ class SovereignClient:
         gas_balance = w3.eth.get_balance(self.address)
         
         if gas_balance == 0:
+            if self.disable_gasless_relay:
+                raise ValueError("Insufficient gas (ETH) and Gasless Relay is disabled!")
             print("⛽ No POL for gas. Attempting gasless relay refuel...")
             return self._send_usdc_relayed(amount_usd)
 
@@ -354,7 +356,7 @@ class SovereignClient:
         domain_data = {
             "name": "USD Coin",
             "version": "2",
-            "chainId": 137,
+            "chainId": 84532, # Base Sepolia
             "verifyingContract": USDC_ADDRESS
         }
         

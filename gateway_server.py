@@ -127,7 +127,7 @@ else:
         print("ℹ️  [x402] Disabled via ENABLE_X402=false")
 
 # --- USDC EIP-3009 CONFIG ---
-USDC_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+USDC_ADDRESS = os.getenv("USDC_CONTRACT_ADDRESS", "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359") # Default: Polygon Mainnet
 USDC_ABI = [
     {
         "constant": False,
@@ -684,7 +684,7 @@ async def refuel_relay(request: Request):
         from web3 import Web3
         from eth_account import Account
         
-        w3 = Web3(Web3.HTTPProvider(POLYGON_RPC))
+        w3 = Web3(Web3.HTTPProvider(os.getenv("RELAY_RPC", POLYGON_RPC)))
         usdc = w3.eth.contract(address=USDC_ADDRESS, abi=USDC_ABI)
         
         # Split signature
@@ -714,7 +714,7 @@ async def refuel_relay(request: Request):
             value, validAfter, validBefore, nonce_bytes,
             v, r, s
         ).build_transaction({
-            'chainId': 137,
+            'chainId': 84532, # Base Sepolia
             'gas': 150000,
             'gasPrice': int(w3.eth.gas_price * 1.5), # Aggressive gas for relayer
             'nonce': nonce_tx,
