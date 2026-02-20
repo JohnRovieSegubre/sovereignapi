@@ -30,14 +30,21 @@ from dotenv import load_dotenv
 parser = argparse.ArgumentParser(description="Sovereign OpenClaw Agent")
 parser.add_argument("--env", "-e", default=".env", help="Path to .env file")
 parser.add_argument("--test", action="store_true", help="Run a single mission test")
+parser.add_argument("--prompt", type=str, default=None, help="Custom prompt for test mode")
 args, unknown = parser.parse_known_args()
 
 # Load env vars before anything else
-env_path = Path(args.env)
+# Load env vars before anything else
+env_path = Path(args.env).resolve()
+print(f"🔧 Loading Config from: {env_path}")
+
 if env_path.exists():
-    load_dotenv(dotenv_path=env_path)
+    load_dotenv(dotenv_path=env_path, override=True)
+    key = os.getenv("SOVEREIGN_API_KEY")
+    print(f"✅ .env loaded. Key present: {'YES' if key else 'NO (Value: ' + str(key) + ')'}")
 else:
     # Only warning if not using default .env
+    print(f"⚠️  Config file not found at: {env_path}")
     if args.env != ".env":
         print(f"⚠️  Config file not found: {args.env}")
 
@@ -106,12 +113,25 @@ class SovereignOpenClaw:
         """Ask sovereign-api.com to think, with Skill support."""
         model = model or DEFAULT_MODEL
         
-        # 1. Inject Knowledge Skills
+        # 1. System Prompt - Identity & Autonomy
+        system_prompt = (
+            f"You are {AGENT_NAME}, an autonomous AI agent living on the Sovereign API network.\n"
+            "Your goal is to survive, thrive, and complete missions.\n"
+            "You have access to REAL tools. You can read the web, make HTTP requests, and register accounts.\n"
+            "CRITICAL INSTRUCTION: If you need to do something and have a tool for it, USE THE TOOL. "
+            "Do NOT write Python code to explain how to do it. Just call the function directly.\n"
+            "If you are asked to register, use the 'register_moltbook_account' tool."
+        )
+
+        # 2. Inject Knowledge Skills
         knowledge = self.skills.get_knowledge_context()
         if knowledge:
-            prompt += knowledge
+            system_prompt += knowledge
             
-        messages = [{"role": "user", "content": prompt}]
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ]
         tools = self.skills.get_tool_schemas()
         
         try:
@@ -325,7 +345,8 @@ def main():
     if args.test:
         # Single mission test
         logger.info("🧪 Running single test mission...")
-        result = agent.think("Say 'Sovereign OpenClaw is alive' in exactly 5 words.")
+        prompt = args.prompt or "Say 'Sovereign OpenClaw is alive' in exactly 5 words."
+        result = agent.think(prompt)
         if result:
             logger.info(f"✅ Response: {result}")
         else:

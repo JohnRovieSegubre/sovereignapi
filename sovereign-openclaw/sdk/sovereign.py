@@ -237,7 +237,8 @@ class SovereignClient:
                         
                         # === CASE A: x402 (Real CDP Protocol) ===
                         x402_header = response.headers.get("PAYMENT-REQUIRED")
-                        if x402_header and self.client._has_x402_support():
+                        # FORCE SKIP x402 SDK for now to use our Custom Relay in CASE B
+                        if False and x402_header and self.client._has_x402_support():
                             print("⚡ x402 Header Detected. Auto-paying via x402 SDK...")
                             try:
                                 x402_session = self.client._get_x402_session()
@@ -327,22 +328,28 @@ class SovereignClient:
 
     def _send_usdc(self, amount_usd):
         """
-        Sends USDC on Polygon. Returns the Transaction Hash.
+        Sends USDC on EVM Chain. Returns the Transaction Hash.
         """
         if not self.gateway_wallet:
             raise ValueError("Gateway Wallet Address not configured in SDK!")
 
         w3 = Web3(Web3.HTTPProvider(self.rpc_url))
         if not w3.is_connected():
-            raise ConnectionError(f"Cannot connect to Polygon RPC: {self.rpc_url}")
+            raise ConnectionError(f"Cannot connect to RPC: {self.rpc_url}")
 
-        # Check native POL balance (gas)
-        gas_balance = w3.eth.get_balance(self.address)
+        # Check native balance (gas)
+        try:
+            gas_balance = w3.eth.get_balance(self.address)
+        except:
+             gas_balance = 0
+             
+        # Force Relay if balance is low (dust)
+        MIN_GAS_WEI = 500000000000000 # 0.0005 ETH
         
-        if gas_balance == 0:
+        if gas_balance < MIN_GAS_WEI:
             if self.disable_gasless_relay:
-                raise ValueError("Insufficient gas (ETH) and Gasless Relay is disabled!")
-            print("⛽ No POL for gas. Attempting gasless relay refuel...")
+                raise ValueError(f"Insufficient gas ({gas_balance} < {MIN_GAS_WEI}) and Relay disabled!")
+            print(f"⛽ Low gas ({gas_balance}). Attempting gasless relay...")
             return self._send_usdc_relayed(amount_usd)
 
         # Setup Contract
@@ -351,26 +358,45 @@ class SovereignClient:
 
         # Build Transaction
         nonce = w3.eth.get_transaction_count(self.address)
+        chain_id = int(os.getenv("CHAIN_ID", "84532")) # Default Base Sepolia
+        
+        # EIP-1559 Dynamic Fees (Base Sepolia compatible)
+        chain_id = int(os.getenv("CHAIN_ID", "84532"))
+        
+        # Estimate Gas Limit (Optimized for low balance)
+        try:
+             gas_limit = usdc.functions.transfer(self.gateway_wallet, amount_units).estimate_gas({'from': self.address})
+             gas_limit = int(gas_limit * 1.1) # 10% Buffer only
+        except Exception as e:
+             print(f"⚠️ Gas Est Failed: {e}")
+             gas_limit = 80000 # Lower default
+
+        # Build TX (EIP-1559) - Frugal
+        base_fee = w3.eth.get_block('latest')['baseFeePerGas']
+        max_priority = w3.to_wei(0.1, 'gwei') # 0.1 Gwei tip (very low)
+        max_fee = base_fee + max_priority
         
         tx = usdc.functions.transfer(
             self.gateway_wallet,
             amount_units
         ).build_transaction({
-            'chainId': 137,  # Polygon Mainnet
-            'gas': 100000,
-            'gasPrice': int(w3.eth.gas_price * 1.2),
+            'chainId': chain_id,
+            'gas': gas_limit,
+            'maxFeePerGas': max_fee,
+            'maxPriorityFeePerGas': max_priority,
             'nonce': nonce,
+            'type': '0x2' # EIP-1559
         })
 
         # Sign & Send
         signed_tx = w3.eth.account.sign_transaction(tx, self.private_key)
         tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         
-        print(f"💸 Sent ${amount_usd} USDC. Tx: {tx_hash.hex()}")
+        print(f"💸 Sent ${amount_usd} USDC on Chain {chain_id}. Tx: {tx_hash.hex()}")
         return tx_hash.hex()
 
     def _send_usdc_relayed(self, amount_usd):
-        """Sends USDC via Gateway Relayer (EIP-3009) — No POL needed."""
+        """Sends USDC via Gateway Relayer (EIP-3009) — No native gas needed."""
         import secrets
         
         amount_units = int(amount_usd * (10 ** 6))
@@ -382,10 +408,9 @@ class SovereignClient:
         domain_data = {
             "name": "USD Coin",
             "version": "2",
-            "chainId": 84532, # Base Sepolia
+            "chainId": 84532, # Base Sepolia default
             "verifyingContract": USDC_ADDRESS
         }
-        print(f"DEBUG: Signing for ChainID: {domain_data['chainId']} USDC: {USDC_ADDRESS}")
         
         message_types = {
             "TransferWithAuthorization": [
@@ -427,7 +452,9 @@ class SovereignClient:
         if self.api_key:
             headers["X-Sovereign-Api-Key"] = self.api_key
             
+        print(f"🚀 Sending Relay Request to {relay_url}...")
         resp = requests.post(relay_url, json=payload, headers=headers, timeout=30)
+        
         if resp.status_code == 200:
             tx_hash = resp.json().get("tx_hash")
             print(f"🚀 Relayed Transaction Sent! Tx: {tx_hash}")
@@ -437,6 +464,10 @@ class SovereignClient:
 
     def _has_x402_support(self):
         """Check if this client can auto-pay via x402 (needs private key + SDK)."""
+        # If Relay is disabled, we force 'Legacy' mode to do Direct TX via _send_usdc
+        if self.disable_gasless_relay:
+            return False
+            
         return X402_CLIENT_AVAILABLE and self.private_key is not None
 
     def _get_x402_session(self):
