@@ -23,6 +23,7 @@ import os
 import sys
 import time
 import logging
+import json
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -163,10 +164,11 @@ class SovereignOpenClaw:
                     
                     try:
                         args = json.loads(args_str)
-                        logger.info(f"🤖 Tool Call: {func_name}")
+                        logger.info(f"🤖 Tool Call: {func_name} | Args: {args}")
                         result = self.skills.execute_tool(func_name, args)
                     except Exception as e:
-                        result = f"Error: {str(e)}"
+                        logger.error(f"❌ Tool Parse Error: {e} | Raw Args: {repr(args_str)}")
+                        result = f"Error parsing arguments: {str(e)}. Raw string: {args_str}"
                     
                     messages.append({
                         "role": "tool",
