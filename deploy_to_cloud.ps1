@@ -68,17 +68,8 @@ if ($enable_x402 -eq "" -or $enable_x402 -eq "Y" -or $enable_x402 -eq "y") {
     }
 }
 
-$facilitator_key = Read-Host "Enter Facilitator Private Key for Gasless Refuel (0x...) [Skip if already set]"
-if ($facilitator_key) {
-    $env_cmd = "grep -q 'FACILITATOR_PRIVATE_KEY' $REMOTE_PATH/.env && sed -i 's/^FACILITATOR_PRIVATE_KEY=.*/FACILITATOR_PRIVATE_KEY=$facilitator_key/' $REMOTE_PATH/.env || echo 'FACILITATOR_PRIVATE_KEY=$facilitator_key' >> $REMOTE_PATH/.env"
-    if ($SSH_KEY) {
-        ssh -i "$SSH_KEY" "$USER@$SERVER_IP" "$env_cmd"
-    }
-    else {
-        ssh "$USER@$SERVER_IP" "$env_cmd"
-    }
-    Write-Host "   - Updated remote .env with facilitator key" -ForegroundColor Green
-}
+# Legacy Facilitator Key prompt removed (Uses Coinbase Public Facilitator)
+
 
 # Upload SDK Directory (Recursive)
 Write-Host "   - Uploading SDK folder..."

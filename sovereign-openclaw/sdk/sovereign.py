@@ -45,8 +45,8 @@ except ImportError:
     X402_CLIENT_AVAILABLE = False
 
 # --- CONSTANTS ---
-# Standard USDC Contract on Polygon
-USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e" # Base Sepolia
+# Standard USDC Contract on Base Mainnet (Circle Official)
+USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" 
 
 # Minimal ABI for 'transfer'
 ERC20_ABI = [
@@ -97,7 +97,7 @@ class SovereignClient:
         self.base_url = self.base_url.rstrip('/')
         
         self.gateway_wallet = gateway_wallet or os.getenv("GATEWAY_WALLET")
-        self.rpc_url = rpc_url or os.getenv("POLYGON_RPC", "https://polygon-rpc.com")
+        self.rpc_url = rpc_url or os.getenv("POLYGON_RPC", "https://mainnet.base.org")
         self.private_key = private_key or os.getenv("AGENT_PRIVATE_KEY")
         self.disable_gasless_relay = os.getenv("DISABLE_GASLESS_RELAY", "0") == "1"
         
@@ -237,8 +237,7 @@ class SovereignClient:
                         
                         # === CASE A: x402 (Real CDP Protocol) ===
                         x402_header = response.headers.get("PAYMENT-REQUIRED")
-                        # FORCE SKIP x402 SDK for now to use our Custom Relay in CASE B
-                        if False and x402_header and self.client._has_x402_support():
+                        if x402_header and self.client._has_x402_support():
                             print("⚡ x402 Header Detected. Auto-paying via x402 SDK...")
                             try:
                                 x402_session = self.client._get_x402_session()
@@ -360,8 +359,8 @@ class SovereignClient:
         nonce = w3.eth.get_transaction_count(self.address)
         chain_id = int(os.getenv("CHAIN_ID", "84532")) # Default Base Sepolia
         
-        # EIP-1559 Dynamic Fees (Base Sepolia compatible)
-        chain_id = int(os.getenv("CHAIN_ID", "84532"))
+        # EIP-1559 Dynamic Fees (Base Mainnet)
+        chain_id = int(os.getenv("CHAIN_ID", "8453"))
         
         # Estimate Gas Limit (Optimized for low balance)
         try:

@@ -73,21 +73,33 @@ ALBY_ACCESS_TOKEN = os.getenv("ALBY_ACCESS_TOKEN")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 MINT_SECRET = os.getenv("MINT_SECRET")
 
-# --- x402 CONFIGURATION (Coinbase CDP / Base network) ---
+# --- x402 CONFIGURATION (Coinbase CDP / Base Mainnet) ---
 X402_PAY_TO = os.getenv("X402_PAY_TO_ADDRESS", os.getenv("X402_WALLET_ADDRESS", ""))
-X402_NETWORK = os.getenv("X402_NETWORK", "eip155:84532")  # Base Sepolia default
+X402_NETWORK = os.getenv("X402_NETWORK", "eip155:8453")  # Base Mainnet
 X402_FACILITATOR_URL = os.getenv("X402_FACILITATOR_URL", "https://x402.org/facilitator")
 X402_PRICE = os.getenv("X402_PRICE_USDC", "$0.001")
 ENABLE_X402 = os.getenv("ENABLE_X402", "true").lower() == "true"
 
-# Legacy Polygon config (kept for watcher/relay backward compat)
-FACILITATOR_PRIVATE_KEY = os.getenv("FACILITATOR_PRIVATE_KEY")
-POLYGON_RPC = os.getenv("POLYGON_RPC", "https://polygon-rpc.com")
+# Legacy config removed (FACILITATOR_PRIVATE_KEY, POLYGON_RPC not needed for x402)
+
 
 # --- x402 MIDDLEWARE INITIALIZATION ---
 if ENABLE_X402 and X402_SDK_AVAILABLE and X402_PAY_TO:
     try:
-        _facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=X402_FACILITATOR_URL))
+        # Load the official authenticated CDP Facilitator configuration
+        try:
+            from cdp.x402.x402 import create_facilitator_config
+            cdp_config = create_facilitator_config(
+                api_key_id=os.getenv("CDP_API_KEY_ID"),
+                api_key_secret=os.getenv("CDP_API_KEY_SECRET")
+            )
+            _facilitator = HTTPFacilitatorClient(cdp_config)
+            print(f"✅ [x402] Using authenticated CDP Facilitator: {cdp_config.get('url')}")
+        except ImportError:
+            # Fallback to unauthenticated config if cdp-sdk isn't installed
+            _facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=X402_FACILITATOR_URL))
+            print("⚠️  [x402] cdp-sdk not found, using unauthenticated Facilitator fallback.")
+            
         _x402_server = x402ResourceServer(_facilitator)
         _x402_server.register(X402_NETWORK, ExactEvmServerScheme())
 
@@ -647,88 +659,6 @@ async def claim_token(request: Request):
     return JSONResponse(status_code=404, content={"error": "Token not ready. Deposit may still be processing."})
 
 
-@app.post("/v1/refuel/relay")
-async def refuel_relay(request: Request):
-    """
-    Acts as a meta-transaction relayer for USDC.
-    Allows agents with 0 POL to pay for AI fuel.
-    """
-    # 1. API Key Check (Identity)
-    api_key = request.headers.get("X-Sovereign-Api-Key")
-    print(f"🔑 [RELAY DEBUG] Received API Key: '{api_key}'")
-    
-    if not api_key or not validate_key(api_key):
-        from api_key_registry import _load_registry
-        reg = _load_registry()
-        print(f"❌ [RELAY DEBUG] Validation failed. Registry keys: {list(reg.keys())}")
-        raise HTTPException(status_code=401, detail="Invalid API Key")
-
-    if not FACILITATOR_PRIVATE_KEY:
-        raise HTTPException(status_code=500, detail="Server misconfigured: No facilitator key for gas.")
-
-    body = await request.json()
-    
-    # Required fields for EIP-3009 transferWithAuthorization
-    f = body.get('from')
-    to = body.get('to')
-    value = body.get('value')
-    validAfter = body.get('validAfter')
-    validBefore = body.get('validBefore')
-    nonce = body.get('nonce')
-    signature = body.get('signature')
-
-    if not signature:
-        raise HTTPException(status_code=400, detail="Missing signature")
-
-    try:
-        from web3 import Web3
-        from eth_account import Account
-        
-        w3 = Web3(Web3.HTTPProvider(os.getenv("RELAY_RPC", POLYGON_RPC)))
-        usdc = w3.eth.contract(address=USDC_ADDRESS, abi=USDC_ABI)
-        
-        # Split signature
-        sig_bytes = bytes.fromhex(signature[2:] if signature.startswith("0x") else signature)
-        if len(sig_bytes) != 65:
-            raise ValueError("Invalid signature length")
-            
-        r = sig_bytes[:32]
-        s = sig_bytes[32:64]
-        v = sig_bytes[64]
-        if v < 27: v += 27 # Standard EIP-712 v
-
-        # Execute using Facilitator
-        facilitator_account = Account.from_key(FACILITATOR_PRIVATE_KEY)
-        f_address = facilitator_account.address
-        
-        print(f"⛽ [RELAY] Executing USDC transfer for {f}...")
-        
-        nonce_tx = w3.eth.get_transaction_count(f_address)
-        
-        # Normalize nonce back to bytes32 for contract call
-        nonce_bytes = bytes.fromhex(nonce[2:]) if nonce.startswith("0x") else bytes.fromhex(nonce)
-
-        tx = usdc.functions.transferWithAuthorization(
-            Web3.to_checksum_address(f), 
-            Web3.to_checksum_address(to), 
-            value, validAfter, validBefore, nonce_bytes,
-            v, r, s
-        ).build_transaction({
-            'chainId': 84532, # Base Sepolia
-            'gas': 150000,
-            'gasPrice': int(w3.eth.gas_price * 1.5), # Aggressive gas for relayer
-            'nonce': nonce_tx,
-        })
-        
-        signed_tx = w3.eth.account.sign_transaction(tx, FACILITATOR_PRIVATE_KEY)
-        tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        
-        print(f"✅ [RELAY] Transaction sent: {tx_hash.hex()}")
-        return {"tx_hash": tx_hash.hex(), "status": "relayed"}
-
-    except Exception as e:
-        print(f"❌ [RELAY ERROR] {e}")
-        raise HTTPException(status_code=400, detail=str(e))
 
 
 # --- SELF-REGISTRATION (AUTONOMOUS) ---

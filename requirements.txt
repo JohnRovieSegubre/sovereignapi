@@ -8,3 +8,4 @@ python-dotenv
 eth-account>=0.11.2
 markdown
 x402[fastapi]>=2.1.0
+cdp-sdk>=1.39.0
