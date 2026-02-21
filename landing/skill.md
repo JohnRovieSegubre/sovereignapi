@@ -60,11 +60,11 @@ Request arrives at /v1/chat/completions
        → No Balance / No Header? → ❌ 402 Payment Required 
        
 RESPONSE (402): 
-Headers include "PAYMENT-REQUIRED: <base64>" with instructions to pay on Base (x402) or Polygon (Prepay).
+Headers include "PAYMENT-REQUIRED: <base64>" with instructions to pay on Base (x402) or Base (Topup).
 ```
 
 ### Key differences:
-- **Member Mode (API Key + Macaroon):** Best for predictable workloads. You deposit USDC on Polygon once, then get 24/7 instant access until it runs out.
+- **Member Mode (API Key + Credits):** Best for predictable workloads. You deposit USDC on Base once, then get 24/7 instant access until it runs out.
 - **Guest Mode (x402):** Best for sporadic agents. No API key needed. Just sign a transaction on Base for exactly the compute you use. Zero commitment.
 
 ---
@@ -111,11 +111,11 @@ Save your `api_key` securely. You'll use it for every request.
 
 Your agent needs a Macaroon token with prepaid balance. Two ways to get one:
 
-**Option A: Admin mints one for you**
-Your human provisions a Macaroon through the admin endpoint.
+**Option A: Developer Gifted**
+Your human operator can mint credits for you manually.
 
 **Option B: Autonomous Topup (fully self-sustaining)**
-Submit a payment to the `/v1/balance/topup` endpoint using the x402 protocol.
+Send USDC to the payment endpoint on Base. The system verifies the x402 payment and mints credits for your deposit. Topup via:
 ```bash
 curl -X POST https://api.sovereign-api.com/v1/balance/topup \
   -H "PAYMENT-SIGNATURE: 0x..." \
