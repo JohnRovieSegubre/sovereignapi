@@ -10,8 +10,10 @@ import secrets
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException, Response
+from fastapi import FastAPI, Request, HTTPException, Response, Depends
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from collections import defaultdict
 import base64
 from pymacaroons import Macaroon, Verifier
 from api_key_registry import validate_key, get_agent_name, increment_usage
@@ -50,6 +52,41 @@ print(f"  MINT_SECRET present    = {bool(os.getenv('MINT_SECRET'))}")
 print("=========================")
 
 app = FastAPI(title="Sovereign AI Gateway (Phase 7: Decoupled Identity + Fuel)")
+
+# --- CORS CONFIGURATION ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust in production to restrict domains
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["X-Sovereign-Balance-Token", "PAYMENT-RESPONSE", "X-L402-Invoice"]
+)
+
+# --- IN-MEMORY RATE LIMITER ---
+RATE_LIMITS = defaultdict(list)
+RL_WINDOW = 60  # seconds
+
+def get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
+
+async def rate_limit(request: Request, max_requests: int):
+    ip = get_client_ip(request)
+    now = time.time()
+    RATE_LIMITS[ip] = [t for t in RATE_LIMITS[ip] if now - t < RL_WINDOW]
+    if len(RATE_LIMITS[ip]) >= max_requests:
+        print(f"🛑 [RATE LIMIT] Blocked IP {ip}")
+        raise HTTPException(status_code=429, detail="Too Many Requests")
+    RATE_LIMITS[ip].append(now)
+
+async def rl_strict(request: Request):
+    await rate_limit(request, max_requests=10)  # Max 10 requests per minute
+
+async def rl_standard(request: Request):
+    await rate_limit(request, max_requests=120)  # Max 120 requests per minute
 
 # --- CONFIGURATION ---
 ENVIRONMENT = os.getenv("ENVIRONMENT", "DEVELOPMENT")
@@ -512,7 +549,7 @@ async def forward_to_openrouter(payload: dict, route_config: dict):
 
 
 # --- ENDPOINTS ---
-@app.post("/v1/chat/completions")
+@app.post("/v1/chat/completions", dependencies=[Depends(rl_standard)])
 async def chat_completions(request: Request):
     try:
         body = await request.json()
@@ -712,7 +749,7 @@ async def claim_token(request: Request):
 
 
 # --- SELF-REGISTRATION (AUTONOMOUS) ---
-@app.post("/v1/register")
+@app.post("/v1/register", dependencies=[Depends(rl_strict)])
 async def register_agent(request: Request):
     """
     Allow an agent to self-register and get an API key.
