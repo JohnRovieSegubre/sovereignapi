@@ -5,29 +5,23 @@ services:
     build: .
     container_name: sovereign_gateway
     command: python -u gateway_server.py
-    ports:
-      - "80:8000"
+    expose:
+      - "8000"
     volumes:
       - ./data:/app/.agent
       - ./.env:/app/.env:ro
     env_file:
       - .env
     environment:
-      # Core Secrets
       - MINT_SECRET=${MINT_SECRET}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - ALBY_ACCESS_TOKEN=${ALBY_ACCESS_TOKEN}
       - SITE_URL=${SITE_URL}
-
-      # x402 Hybrid Config
       - ENABLE_X402=${ENABLE_X402}
       - X402_WALLET_ADDRESS=${X402_WALLET_ADDRESS}
       - X402_FACILITATOR_URL=${X402_FACILITATOR_URL}
-
-      # Gasless Refuel Config
       - FACILITATOR_PRIVATE_KEY=${FACILITATOR_PRIVATE_KEY}
       - POLYGON_RPC=${POLYGON_RPC}
-
     restart: always
 
   watcher:
@@ -46,4 +40,16 @@ services:
     volumes:
       - ./data:/app/.agent
       - .:/app
+    restart: always
+
+  nginx:
+    image: nginx:latest
+    container_name: sovereign_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./landing:/usr/share/nginx/html:ro
+    depends_on:
+      - gateway
     restart: always
