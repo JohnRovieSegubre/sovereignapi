@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-httpx
-pymacaroons
-requests
-web3
-python-dotenv
-eth_account
