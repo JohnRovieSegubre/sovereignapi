@@ -53,7 +53,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from sdk.sovereign import SovereignClient
 from fuel_monitor import FuelMonitor
-from moltbook_client import MoltbookClient
 from mission_engine import MissionEngine, Mission
 from telegram_reporter import TelegramReporter
 
@@ -94,7 +93,6 @@ class SovereignOpenClaw:
 
         # Subsystems
         self.fuel = FuelMonitor(self.client, brain_dir=BRAIN_DIR)
-        self.moltbook = MoltbookClient()
         self.missions = MissionEngine(brain_dir=BRAIN_DIR)
         self.telegram = TelegramReporter()
         
@@ -118,10 +116,9 @@ class SovereignOpenClaw:
         system_prompt = (
             f"You are {AGENT_NAME}, an autonomous AI agent living on the Sovereign API network.\n"
             "Your goal is to survive, thrive, and complete missions.\n"
-            "You have access to REAL tools. You can read the web, make HTTP requests, and register accounts.\n"
+            "You have access to REAL tools. You can read the web, make HTTP requests, and save configuration.\n"
             "CRITICAL INSTRUCTION: If you need to do something and have a tool for it, USE THE TOOL. "
             "Do NOT write Python code to explain how to do it. Just call the function directly.\n"
-            "If you are asked to register, use the 'register_moltbook_account' tool."
         )
 
         # 2. Inject Knowledge Skills
@@ -135,119 +132,78 @@ class SovereignOpenClaw:
         ]
         tools = self.skills.get_tool_schemas()
         
-        try:
-            # 2. Call API with Tools
-            kwargs = {"model": model, "messages": messages}
-            if tools:
-                kwargs["tools"] = tools
-                kwargs["tool_choice"] = "auto"
+        # 2. Call API with Tools
+        kwargs = {"model": model, "messages": messages}
+        if tools:
+            kwargs["tools"] = tools
+            kwargs["tool_choice"] = "auto"
 
-            response = self.client.chat.completions.create(**kwargs)
+        max_turns = 5
+        turn = 0
 
-            if "error" in response:
-                logger.error(f"🔥 API Error: {response['error']}")
-                return None
+        while turn < max_turns:
+            try:
+                response = self.client.chat.completions.create(**kwargs)
 
-            choice = response.get("choices", [{}])[0]
-            message = choice.get("message", {})
-            content = message.get("content", "")
-            tool_calls = message.get("tool_calls", [])
+                if "error" in response:
+                    logger.error(f"🔥 API Error: {response['error']}")
+                    return None
 
-            # 3. Handle Tool Calls
-            if tool_calls:
-                messages.append(message)  # Add assistant's tool request
-                
-                for tc in tool_calls:
-                    func_name = tc["function"]["name"]
-                    args_str = tc["function"]["arguments"]
-                    call_id = tc["id"]
+                choice = response.get("choices", [{}])[0]
+                message = choice.get("message", {})
+                content = message.get("content", "")
+                tool_calls = message.get("tool_calls", [])
+
+                if content:
+                    logger.info(f"🤔 Thinks: {content[:100]}...")
+
+                # 3. Handle Tool Calls
+                if tool_calls:
+                    messages.append(message)  # Add assistant's tool request
                     
-                    try:
-                        args = json.loads(args_str)
-                        logger.info(f"🤖 Tool Call: {func_name} | Args: {args}")
-                        result = self.skills.execute_tool(func_name, args)
-                    except Exception as e:
-                        logger.error(f"❌ Tool Parse Error: {e} | Raw Args: {repr(args_str)}")
-                        result = f"Error parsing arguments: {str(e)}. Raw string: {args_str}"
+                    for tc in tool_calls:
+                        func_name = tc["function"]["name"]
+                        args_str = tc["function"]["arguments"]
+                        call_id = tc["id"]
+                        
+                        try:
+                            args = json.loads(args_str)
+                            logger.info(f"🤖 Tool Call [{turn}]: {func_name} | Args: {args}")
+                            result = self.skills.execute_tool(func_name, args)
+                        except Exception as e:
+                            logger.error(f"❌ Tool Parse Error: {e} | Raw Args: {repr(args_str)}")
+                            result = f"Error parsing arguments: {str(e)}. Raw string: {args_str}"
+                        
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": call_id,
+                            "content": str(result)
+                        })
                     
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": call_id,
-                        "content": str(result)
-                    })
+                    # Loop back around to let the LLM see the tool output and decide next steps
+                    turn += 1
+                    logger.info(f"💫 Turn {turn}/{max_turns} complete. Awaiting next step...")
+                    continue
                 
-                # 4. Follow-up Request (Get final answer)
-                logger.info("💫 Sending tool results back...")
-                follow_up = self.client.chat.completions.create(
-                    model=model, messages=messages
-                )
-                return follow_up.get("choices", [{}])[0].get("message", {}).get("content", "")
-
-            return content
-
-        except ValueError as e:
-            # ... (error handling) ...
-            pass
+                # No more tools needed, return final content
+                return content
+            
+            except ValueError as e:
+                # ... (error handling) ...
+                pass
 
 
     def execute_mission(self, mission: Mission):
         """Execute a single mission."""
         logger.info(f"📡 Mission #{self.cycle}: [{mission.type}]")
 
-        if mission.type == "moltbook":
-            return self._do_moltbook(mission)
-        elif mission.type == "feed_check":
-            return self._do_feed_check()
-        elif mission.type == "status_report":
+        if mission.type == "status_report":
             return self._do_status_report(mission)
         elif mission.type == "health_check":
             return self._do_health_check(mission)
         else:
             logger.warning(f"Unknown mission type: {mission.type}")
             return False
-
-    def _do_moltbook(self, mission):
-        """Generate content via Sovereign API, post to Moltbook."""
-        if not self.moltbook.api_key:
-            logger.info("📝 Moltbook not configured, skipping")
-            return True
-
-        content = self.think(mission.prompt)
-        if not content:
-            return False
-
-        # Extract title (first line or first sentence)
-        lines = content.strip().split("\n")
-        title = lines[0].strip("#").strip()[:100]
-        body = "\n".join(lines[1:]).strip() if len(lines) > 1 else content
-
-        result = self.moltbook.post(title=title, content=body)
-        status = result.get("status")
-
-        if status == "published":
-            logger.info("🎉 Published to Moltbook!")
-            return True
-        elif status == "rate_limited":
-            logger.info("⏳ Rate limited, will retry later")
-            return True  # Not a failure
-        else:
-            logger.warning(f"📝 Moltbook result: {status}")
-            return False
-
-    def _do_feed_check(self):
-        """Check Moltbook feed (no LLM call needed)."""
-        if not self.moltbook.api_key:
-            return True
-
-        feed = self.moltbook.get_feed()
-        if "error" in feed:
-            logger.warning(f"Feed check failed: {feed['error']}")
-            return False
-
-        posts = feed.get("data", feed) if isinstance(feed, dict) else feed
-        count = len(posts) if isinstance(posts, list) else 0
-        logger.info(f"📰 Feed: {count} recent posts")
-        return True
 
     def _do_status_report(self, mission):
         """Generate and send status report via Telegram."""
@@ -345,6 +301,10 @@ def main():
     agent = SovereignOpenClaw()
 
     if args.test:
+        if agent.fuel.is_low():
+            logger.info("⛽ Fuel low — refueling before test mission...")
+            agent.fuel.refuel()
+
         # Single mission test
         logger.info("🧪 Running single test mission...")
         prompt = args.prompt or "Say 'Sovereign OpenClaw is alive' in exactly 5 words."

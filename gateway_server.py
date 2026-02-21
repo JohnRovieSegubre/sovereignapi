@@ -19,7 +19,7 @@ from api_key_registry import validate_key, get_agent_name, increment_usage
 # --- x402 PROTOCOL (Real Coinbase CDP integration) ---
 try:
     from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
-    from x402.http.middleware.fastapi import PaymentMiddlewareASGI
+    from x402.http.middleware.fastapi import PaymentMiddlewareASGI, payment_middleware
     from x402.http.types import RouteConfig
     from x402.mechanisms.evm.exact import ExactEvmServerScheme
     from x402.server import x402ResourceServer
@@ -84,6 +84,7 @@ ENABLE_X402 = os.getenv("ENABLE_X402", "true").lower() == "true"
 
 
 # --- x402 MIDDLEWARE INITIALIZATION ---
+_x402_middleware_func = None
 if ENABLE_X402 and X402_SDK_AVAILABLE and X402_PAY_TO:
     try:
         # Load the official authenticated CDP Facilitator configuration
@@ -126,7 +127,7 @@ if ENABLE_X402 and X402_SDK_AVAILABLE and X402_PAY_TO:
             ),
         }
 
-        app.add_middleware(PaymentMiddlewareASGI, routes=_x402_routes, server=_x402_server)
+        _x402_middleware_func = payment_middleware(routes=_x402_routes, server=_x402_server)
         print(f"✅ [x402] Middleware initialized: network={X402_NETWORK}, pay_to={X402_PAY_TO[:10]}..., price={X402_PRICE}")
     except Exception as e:
         print(f"⚠️  [x402] Middleware init failed: {e}")
@@ -137,6 +138,42 @@ else:
         print("⚠️  [x402] Disabled: SDK not installed")
     elif not ENABLE_X402:
         print("ℹ️  [x402] Disabled via ENABLE_X402=false")
+
+
+# --- UNIFIED PAYMENT MIDDLEWARE ---
+# We must intercept the request BEFORE the x402 SDK, because the SDK strictly demands 
+# a cryptographic signature and will block the transaction if one isn't present.
+@app.middleware("http")
+async def unified_payment_middleware(request: Request, call_next):
+    # 1. Macaroon Bypass Check (The "Fast Lane")
+    auth_header = request.headers.get("Authorization", "")
+    
+    if auth_header.startswith("Bearer ") and hasattr(request, "state"):
+        token_str = auth_header.split(" ", 1)[1]
+        try:
+            m = Macaroon.deserialize(token_str)
+            balance = 0
+            for caveat in m.caveats:
+                cid = caveat.caveat_id
+                if isinstance(cid, bytes):
+                    cid = cid.decode('utf-8')
+                if cid.startswith("balance = "):
+                    balance = int(cid.split(" = ")[1])
+            
+            if balance > 0:
+                # Pre-populate payment_payload so verify_payment_header knows what happened
+                request.state.payment_payload = {"type": "macaroon_bypass", "balance": balance}
+                print(f"🎫 [Macaroon] Bypassing x402 toll (balance: {balance} sats)")
+                return await call_next(request)  # Skip the x402 SDK tollbooth entirely!
+        except Exception:
+            pass  # Invalid macaroon, let x402 handle it normally
+            
+    # 2. x402 SDK Check (The "Tollbooth")
+    if _x402_middleware_func is not None:
+        return await _x402_middleware_func(request, call_next)
+    
+    # 3. Disabled x402 (Dev Mode)
+    return await call_next(request)
 
 # --- USDC EIP-3009 CONFIG ---
 USDC_ADDRESS = os.getenv("USDC_CONTRACT_ADDRESS", "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359") # Default: Polygon Mainnet
@@ -372,12 +409,24 @@ async def verify_payment_header(request: Request, cost_sats: int):
           - {"status": 401/402, "error": ...} (Failure)
     """
 
-    # === CHECK 0: x402 PAYMENT (already verified by ASGI middleware) ===
+    # === CHECK 0: PAYMENT PRE-AUTHORIZED (by middleware) ===
     payment_payload = getattr(request.state, "payment_payload", None)
     if payment_payload:
+        # Macaroon bypass: middleware validated the token, but we still need to spend from balance
+        if isinstance(payment_payload, dict) and payment_payload.get("type") == "macaroon_bypass":
+            auth_header = request.headers.get("Authorization", "")
+            token = auth_header.split(" ", 1)[1] if auth_header.startswith("Bearer ") else ""
+            valid, new_token, msg = MINT.verify_and_spend(token, cost_sats)
+            if valid:
+                print(f"🎫 [Macaroon] Spent {cost_sats} sats (bypassed x402)")
+                return True, {"type": "macaroon", "new_token": new_token}
+            print(f"🎫 [Macaroon] Spend failed: {msg}")
+            return False, msg
+        
+        # Real x402 payment (from Coinbase Facilitator)
         print(f"⚡ [x402] Payment verified by middleware — bypassing auth")
         return True, {"type": "x402", "payment_payload": payment_payload}
-
+    
     # === CHECK 1: API KEY (IDENTITY) ===
     api_key = request.headers.get("X-Sovereign-Api-Key")
     
@@ -543,9 +592,11 @@ async def topup_balance(request: Request):
     # 1. Verify Payment (Middleware Check)
     payment_payload = getattr(request.state, "payment_payload", None)
     if not payment_payload:
-        # Should be unreachable if middleware works, but safety net
+        print("⚠️ [topup] Reached topup endpoint without payment_payload in state")
         raise HTTPException(status_code=402, detail="Payment Required")
-
+        
+    print(f"💰 [topup] Payment verified successfully: {payment_payload}")
+    
     # 2. Mint Token
     # $1.00 ~= 100,000 sats (rough approximation for simplicity or use oracle)
     # Since x402 price checks are strict ($1.00), we credit explicitly.
@@ -567,7 +618,6 @@ async def topup_balance(request: Request):
         
         macaroon = Macaroon(location=SITE_URL, identifier=secrets.token_hex(16), key=MINT_SECRET)
         macaroon.add_first_party_caveat(f"balance = {credits_sats}")
-        macaroon.add_first_party_caveat(f"created = {time.time()}")
         serialized = macaroon.serialize()
         
         return {

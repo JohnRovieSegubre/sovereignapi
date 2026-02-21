@@ -111,8 +111,8 @@ class SovereignClient:
         
         self.token = None  # The Macaroon (Bearer Token / Fuel)
         
-        # Token Persistence
-        self.token_file = Path("macaroon.dat") # Default to current dir
+        # Token Persistence (absolute path so it works from any CWD)
+        self.token_file = Path(__file__).parent / "macaroon.dat"
         self._load_token()
         
         # Setup Namespaces (OpenAI-style API)
@@ -155,6 +155,7 @@ class SovereignClient:
                 if resp.status_code == 200:
                     data = resp.json()
                     self.token = data["token"]  # Auto-update token
+                    self._save_token()           # Persist to disk!
                     print(f"✅ Refueled! Credit: {data.get('credits_sats')} sats")
                     return self.token
                 else:
