@@ -156,7 +156,8 @@ class SovereignClient:
                     data = resp.json()
                     self.token = data["token"]  # Auto-update token
                     self._save_token()           # Persist to disk!
-                    print(f"✅ Refueled! Credit: {data.get('credits_sats')} sats")
+                    usdc_val = data.get('credits_sats', 0) / 100000.0
+                    print(f"✅ Refueled! Added: ${usdc_val:.2f} USDC")
                     return self.token
                 else:
                     print(f"❌ x402 Refuel Failed: {resp.status_code} - {resp.text}")

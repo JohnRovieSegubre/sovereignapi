@@ -276,7 +276,7 @@ class SovereignOpenClaw:
                 fuel_stats = self.fuel.get_stats()
                 logger.info(
                     f"📊 Cycle {self.cycle} | "
-                    f"⛽ {fuel_stats['balance_sats']} sats | "
+                    f"💰 Wallet: ${fuel_stats['balance_usdc']:.5f} | "
                     f"✅ {self.missions.get_stats()['successful']} done"
                 )
 

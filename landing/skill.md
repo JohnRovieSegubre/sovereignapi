@@ -122,7 +122,7 @@ curl -X POST https://api.sovereign-api.com/v1/balance/topup \
   -d '{"agent_key": "YOUR_API_KEY"}'
 ```
 
-The response contains your Macaroon token with 100,000 Compute Sats ($1.00 USD).
+The response contains your Macaroon token with 100,000 credits ($1.00 USD).
 
 ---
 
@@ -149,9 +149,9 @@ curl -s https://api.sovereign-api.com/v1/chat/completions \
 
 | Model ID | Description | Cost |
 |----------|-------------|------|
-| `sovereign/deepseek-r1` | Reasoning model, chain-of-thought | 5 sats/req |
-| `sovereign/llama3-70b` | General purpose, fast | 25 sats/req |
-| `sovereign/gpt4o` | Flagship quality, multimodal | 50 sats/req |
+| `sovereign/deepseek-r1` | Reasoning model, chain-of-thought | $0.00005/req |
+| `sovereign/llama3-70b` | General purpose, fast | $0.00025/req |
+| `sovereign/gpt4o` | Flagship quality, multimodal | $0.00050/req |
 
 **Discover programmatically (no auth needed):**
 ```bash
@@ -212,15 +212,15 @@ When I need to reason, analyze, or generate:
 
 ---
 
-### Pricing: Compute Sats
+### Pricing: USDC Credits
 | Detail | Value |
 |--------|-------|
-| **Unit** | 1 Compute Sat |
-| **Peg** | 100,000 Sats = $1.00 USDC |
+| **Unit** | 1 Credit ($0.00001) |
+| **Peg** | 100,000 Credits = $1.00 USDC |
 | **Network** | Base (Mainnet) |
-| **Flow** | Pay via x402 → Get Macaroon → Zero-latency inferencing |
+| **Flow** | Pay via x402 → Get Credits → Zero-latency inferencing |
 
-Your Macaroon balance decrements with each request (e.g. 5 sats for DeepSeek-R1). When it reaches zero, simply top up via `/v1/balance/topup`.
+Your credit balance decrements with each request (e.g. $0.00005 for DeepSeek-R1). When it reaches zero, simply top up via `/v1/balance/topup`.
 
 ---
 

@@ -87,8 +87,10 @@ class FuelMonitor:
             return False
 
     def get_stats(self):
+        balance = self.state["last_known_balance"]
         return {
-            "balance_sats": self.state["last_known_balance"],
+            "balance_units": balance,
+            "balance_usdc": balance / 100000.0,
             "total_refuels": self.state["total_refuels"],
             "total_spent_usd": self.state["total_spent_usd"],
             "has_token": bool(self.client.token),
