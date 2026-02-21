@@ -893,8 +893,8 @@
                         <div class="stat-label">Models Available</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value">5</div>
-                        <div class="stat-label">Sats / Request (from)</div>
+                        <div class="stat-value">$0.00005</div>
+                        <div class="stat-label">USDC / Request (from)</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value">✓</div>
@@ -932,7 +932,7 @@
                     <div class="step-icon">⚡</div>
                     <h3>Instant Settlement</h3>
                     <p>We verify payment instantly via Coinbase CDP.
-                        Macaroons are debited locally for zero-latency. x402 signatures verified on Base.</p>
+                        Credits are debited locally for zero-latency. x402 signatures verified on Base.</p>
                 </div>
                 <div class="step-card fade-in">
                     <div class="step-number">03</div>
@@ -984,7 +984,7 @@
             <div class="section-label">Transparent Pricing</div>
             <h2 class="section-title">Pay Per Request. No Subscriptions.</h2>
             <p class="section-subtitle">Every request costs exactly what we show.
-                <b>Member Mode:</b> Prepay on Polygon.
+                <b>Member Mode:</b> Prepay on Base.
                 <b>Guest Mode:</b> Instant pay on Base (x402).
             </p>
 
@@ -992,8 +992,8 @@
                 <div class="price-card fade-in">
                     <div class="price-model">sovereign/llama3-70b</div>
                     <div class="price-name">Llama 3</div>
-                    <div class="price-amount">25</div>
-                    <div class="price-unit">sats per request</div>
+                    <div class="price-amount">$0.00025</div>
+                    <div class="price-unit">USDC per request</div>
                     <ul class="price-features">
                         <li>70B parameter model</li>
                         <li>Fast inference</li>
@@ -1007,8 +1007,8 @@
                 <div class="price-card featured fade-in">
                     <div class="price-model">sovereign/deepseek-r1</div>
                     <div class="price-name">DeepSeek-R1</div>
-                    <div class="price-amount">5</div>
-                    <div class="price-unit">sats per request</div>
+                    <div class="price-amount">$0.00005</div>
+                    <div class="price-unit">USDC per request</div>
                     <ul class="price-features">
                         <li>Reasoning model</li>
                         <li>Cheapest option</li>
@@ -1022,8 +1022,8 @@
                 <div class="price-card fade-in">
                     <div class="price-model">sovereign/gpt4o</div>
                     <div class="price-name">GPT-4o</div>
-                    <div class="price-amount">50</div>
-                    <div class="price-unit">sats per request</div>
+                    <div class="price-amount">$0.00050</div>
+                    <div class="price-unit">USDC per request</div>
                     <ul class="price-features">
                         <li>Flagship model</li>
                         <li>Multimodal capable</li>
@@ -1078,7 +1078,7 @@
                     <span class="fn">curl</span> https://api.sovereign-api.com/v1/chat/completions \
                     -H <span class="str">"Content-Type: application/json"</span> \
                     -H <span class="str">"X-Sovereign-Api-Key: sk-sov-YOUR_KEY"</span> \
-                    -H <span class="str">"Authorization: Bearer YOUR_MACAROON"</span> \
+                    -H <span class="str">"Authorization: Bearer YOUR_TOKEN"</span> \
                     -d <span class="str">'{
                         "model": "sovereign/deepseek-r1",
                         "messages": [{"role": "user", "content": "Hello, Sovereign."}]
@@ -1126,8 +1126,8 @@
                     <ol
                         style="text-align: left; margin-top: 20px; padding-left: 20px; font-size: 14px; color: var(--text-secondary); line-height: 2;">
                         <li>Run the command above to read the full skill file</li>
-                        <li><b>Option A (Guest):</b> Send request -> get 402 -> pay on Base (Instance access)</li>
-                        <li><b>Option B (Member):</b> Self-Register -> Prepay on Polygon (24/7 access)</li>
+                        <li><b>Option A (Guest):</b> Send request -> get 402 -> pay on Base (Instant access)</li>
+                        <li><b>Option B (Member):</b> Self-Register -> Topup on Base (24/7 access)</li>
                         <li>Start making requests!</li>
                     </ol>
                 </div>
@@ -1171,9 +1171,9 @@
                 </div>
                 <div class="agent-card fade-in">
                     <h3>🤖 Available Models</h3>
-                    <p><code>sovereign/deepseek-r1</code> — 5 sats</p>
-                    <p><code>sovereign/llama3-70b</code> — 25 sats</p>
-                    <p><code>sovereign/gpt4o</code> — 50 sats</p>
+                    <p><code>sovereign/deepseek-r1</code> — $0.00005</p>
+                    <p><code>sovereign/llama3-70b</code> — $0.00025</p>
+                    <p><code>sovereign/gpt4o</code> — $0.00050</p>
                 </div>
                 <div class="agent-card fade-in">
                     <h3>🔗 Resources</h3>
@@ -1383,7 +1383,7 @@ print(response.choices[0].message.content)`;
             const code = `curl https://api.sovereign-api.com/v1/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "X-Sovereign-Api-Key: YOUR_API_KEY" \\
-  -H "Authorization: Bearer YOUR_MACAROON" \\
+  -H "Authorization: Bearer YOUR_TOKEN" \\
   -d '{"model": "sovereign/deepseek-r1", "messages": [{"role": "user", "content": "Hello, Sovereign."}]}'`;
 
             navigator.clipboard.writeText(code);

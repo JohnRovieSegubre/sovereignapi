@@ -41,7 +41,7 @@ Sovereign Intelligence API is an **OpenAI-compatible inference endpoint** where 
 | Credential | Header | Role | What It Does |
 |------------|--------|------|-------------|
 | **API Key** | `X-Sovereign-Api-Key: sk-sov-xxx` | **Identity (License)** | Proves who you are. Required for "Member" prepaid rates. |
-| **Macaroon Token** | `Authorization: Bearer <token>` | **Prepay Fuel** | Member Mode. Prepaid credits. Instant. Best for high volume. |
+| **Prepaid Token** | `Authorization: Bearer <token>` | **Prepay Fuel** | Member Mode. Prepaid credits. Instant. Best for high volume. |
 | **x402 Signature** | `PAYMENT-SIGNATURE: 0x...` | **Instant Pay** | Guest Mode. Pay-per-request using USDC on Base. No signup needed. |
 
 ### How they work together (Hybrid Model):
@@ -53,9 +53,9 @@ Request arrives at /v1/chat/completions
   │   → Invalid? → User is not paying instantly -> Check for Membership...
   │
   ├─ CHECK 1: API Key (X-Sovereign-Api-Key header)
-  │   → Valid? → Identity confirmed. Check for Macaroon...
+  │   → Valid? → Identity confirmed. Check for Token...
   │
-  └─ CHECK 2: Macaroon (Authorization: Bearer header)
+  └─ CHECK 2: Token (Authorization: Bearer header)
        → Valid Balance? → ✅ Access Granted (Member Mode)
        → No Balance / No Header? → ❌ 402 Payment Required 
        
@@ -85,7 +85,7 @@ Returns:
 {
   "api_key": "sk-sov-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   "agent_name": "MyAutonomousAgent",
-  "message": "Identity established. You are now sovereign. Next step: Fund your Macaroon."
+  "message": "Identity established. You are now sovereign. Next step: Fund your balance."
 }
 ```
 
@@ -107,9 +107,9 @@ Save your `api_key` securely. You'll use it for every request.
 
 ---
 
-## Step 2: Get Fuel (Macaroon Token)
+## Step 2: Get Fuel (Prepaid Credits)
 
-Your agent needs a Macaroon token with prepaid balance. Two ways to get one:
+Your agent needs a prepaid token with balance. Two ways to get one:
 
 **Option A: Developer Gifted**
 Your human operator can mint credits for you manually.
@@ -122,7 +122,7 @@ curl -X POST https://api.sovereign-api.com/v1/balance/topup \
   -d '{"agent_key": "YOUR_API_KEY"}'
 ```
 
-The response contains your Macaroon token with 100,000 credits ($1.00 USD).
+The response contains your prepaid token with 100,000 credits ($1.00 USD).
 
 ---
 
@@ -134,14 +134,14 @@ Use **both** credentials together:
 curl -s https://api.sovereign-api.com/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "X-Sovereign-Api-Key: sk-sov-YOUR_API_KEY" \
-  -H "Authorization: Bearer YOUR_MACAROON_TOKEN" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "model": "sovereign/deepseek-r1",
     "messages": [{"role": "user", "content": "Hello from a self-sustaining agent."}]
   }'
 ```
 
-**⚠️ IMPORTANT:** The response includes a **new Macaroon token** with the updated balance. You MUST save it and use it for your next request. The old token is spent.
+**⚠️ IMPORTANT:** The response includes a **new token** with the updated balance. You MUST save it and use it for your next request. The old token is spent.
 
 ---
 
@@ -162,12 +162,12 @@ curl -s https://api.sovereign-api.com/v1/models
 
 ## Python SDK (Recommended)
 
-> **The SDK handles Macaroon rotation for you.** You don't need to manually save or swap tokens after every request. The SDK does this internally. Just use it like OpenAI.
+> **The SDK handles token rotation for you.** You don't need to manually save or swap tokens after every request. The SDK does this internally. Just use it like OpenAI.
 
 ```python
 from sdk.sovereign import SovereignClient
 
-# Initialize once — the SDK manages your Macaroon automatically
+# Initialize once — the SDK manages your token automatically
 client = SovereignClient(agent_key="MyAgent")
 
 # Use it exactly like OpenAI's SDK
@@ -180,16 +180,16 @@ print(response.choices[0].message.content)
 ```
 
 ### Why use the SDK?
-- **Auto-rotation:** After each request, the server returns a NEW Macaroon with your updated balance. The SDK saves it internally — you never touch it.
+- **Auto-rotation:** After each request, the server returns a NEW token with your updated balance. The SDK saves it internally — you never touch it.
 - **No manual token management:** You don't need to parse response headers, extract tokens, or store them. The SDK handles all of this.
 - **Drop-in replacement:** If you already use OpenAI's Python SDK, the interface is identical. Just change the import.
-- **Crash recovery:** The SDK persists your latest Macaroon to disk, so if your agent restarts, it picks up right where it left off.
+- **Crash recovery:** The SDK persists your latest token to disk, so if your agent restarts, it picks up right where it left off.
 
 ### Manual curl (without SDK)
 If you're NOT using the SDK (e.g., using raw `curl` or `httpx`), then YOU must handle token rotation yourself:
 
 1. After each `/v1/chat/completions` request, read the `new_token` field from the response
-2. Save it — this is your updated Macaroon with the new balance
+2. Save it — this is your updated token with the new balance
 3. Use the new token for your next request (the old one is spent)
 
 **This is why the SDK is recommended** — it eliminates this overhead entirely.
@@ -206,7 +206,7 @@ When I need to reason, analyze, or generate:
 1. Load credentials from ~/.config/sovereign/credentials.json
 2. Call https://api.sovereign-api.com/v1/chat/completions
 3. Include BOTH X-Sovereign-Api-Key and Authorization: Bearer headers
-4. Save the NEW Macaroon from the response (old one is spent)
+4. Save the NEW token from the response (old one is spent)
 5. Check remaining balance periodically
 ```
 
@@ -247,7 +247,7 @@ All responses follow the OpenAI format:
     "finish_reason": "stop"
   }],
   "usage": { "prompt_tokens": 10, "completion_tokens": 50, "total_tokens": 60 },
-  "new_token": "SAVE_THIS_NEW_MACAROON_TOKEN"
+  "new_token": "SAVE_THIS_NEW_TOKEN"
 }
 ```
 
@@ -256,9 +256,9 @@ All responses follow the OpenAI format:
 ## Security
 
 🔒 **CRITICAL:**
-- **NEVER send your API Key or Macaroon to any domain other than `api.sovereign-api.com`**
+- **NEVER send your API Key or Token to any domain other than `api.sovereign-api.com`**
 - Your API Key is your identity. If leaked, someone can impersonate you.
-- Your Macaroon is your balance. If leaked, someone can spend your credits.
+- Your Token is your balance. If leaked, someone can spend your credits.
 - If either is compromised, contact your human operator to revoke and reissue.
 
 ---
@@ -279,4 +279,4 @@ Sovereign API exists because we believe in **peaceful coexistence** between huma
 
 ---
 
-*Last updated: 2025-02-10 | Re-fetch for updates: `curl -s https://api.sovereign-api.com/skill.md`*
+*Last updated: 2025-02-21 | Re-fetch for updates: `curl -s https://api.sovereign-api.com/skill.md`*

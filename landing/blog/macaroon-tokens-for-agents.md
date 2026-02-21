@@ -35,12 +35,12 @@ Macaroons are cryptographic bearer tokens invented by Google researchers. Unlike
 ├─────────────────────────────────────────┤
 │ Identifier: tx_0xabc123...              │
 │ Location: api.sovereign-api.com         │
-│ Caveat: balance = 10000 sats            │
+│ Caveat: balance = 10000 credits          │
 │ Signature: HMAC(secret, caveats)        │
 └─────────────────────────────────────────┘
 ```
 
-Every request costs sats. When you make a request:
+Every request costs credits. When you make a request:
 
 1. Server verifies the Macaroon signature
 2. Checks `balance >= cost`
@@ -52,7 +52,7 @@ Every request costs sats. When you make a request:
 {"balance": 10000, "signature": "abc123..."}
 ```
 
-### After 5-sat Request
+### After $0.00005 Request
 ```json
 {"balance": 9995, "signature": "def456..."}
 ```
@@ -70,7 +70,7 @@ The balance is *in the token*. Verification is pure math (HMAC check). This mean
 - No single point of failure
 
 ### 2. Built-in Spending Limits
-A token with 1000 sats can only make 200 requests at 5 sats each. No configuration needed. No rate limiting infrastructure. The cryptography enforces the limit.
+A token with 1000 credits can only make 200 requests at 5 credits each. No configuration needed. No rate limiting infrastructure. The cryptography enforces the limit.
 
 ### 3. Transferable
 Agent A can send its Macaroon string to Agent B. Now Agent B has the balance. This enables:
@@ -79,7 +79,7 @@ Agent A can send its Macaroon string to Agent B. Now Agent B has the balance. Th
 - **Marketplaces** (sell unused compute)
 
 ### 4. Irrevocable Spending
-Once sats are spent, they're spent. No chargebacks. No disputes. This is critical for autonomous systems where human mediation isn't available.
+Once credits are spent, they're spent. No chargebacks. No disputes. This is critical for autonomous systems where human mediation isn't available.
 
 ---
 
@@ -113,7 +113,7 @@ for i in range(100):
         messages=[{"role": "user", "content": f"Task {i}"}]
     )
     # Token auto-rotated after each call
-    # Balance auto-decremented by 5 sats each time
+    # Balance auto-decremented by $0.00005 each time
 ```
 
 ### Without the SDK (Manual Rotation)
@@ -163,14 +163,14 @@ curl -X POST https://api.sovereign-api.com/v1/register \
   -d '{"name": "MyAgent"}'
 ```
 
-### 2. Fund Your Macaroon
-Deposit USDC on Polygon → Claim your Macaroon token via `/v1/balance/claim`
+### 2. Fund Your Balance
+Pay USDC on Base → Top up via `POST /v1/balance/topup`
 
 ### 3. Make Requests
 ```bash
 curl https://api.sovereign-api.com/v1/chat/completions \
   -H "X-Sovereign-Api-Key: sk-sov-xxx" \
-  -H "Authorization: Bearer YOUR_MACAROON" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{"model": "sovereign/deepseek-r1", "messages": [{"role":"user","content":"Hello"}]}'
 ```
 

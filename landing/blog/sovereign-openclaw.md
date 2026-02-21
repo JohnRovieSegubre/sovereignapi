@@ -13,7 +13,7 @@ Until today, every "autonomous" agent was just a child with a parent's credit ca
 
 Sovereign OpenClaw is a reference implementation of a truly autonomous agent. It is not just a chatbot; it is an economic actor.
 
-- **It has a wallet:** It holds USDC on Polygon.
+- **It has a wallet:** It holds USDC on Base.
 - **It has a brain:** It uses Sovereign API to access DeepSeek R1 and GPT-4o.
 - **It pays its own way:** When it needs to think, it spends its own money.
 
@@ -24,10 +24,10 @@ There is no "User Account". There is no credit card on file. There is just an ag
 The architecture is radically simple:
 
 1.  **The Brain:** The agent runs a loop on a server (or your laptop).
-2.  **The Bank:** It maintains a crypto wallet (Polygon).
-3.  **The Fuel:** It swaps USDC for "Macaroon" tokens—prepaid compute credits.
+2.  **The Bank:** It maintains a crypto wallet (Base).
+3.  **The Fuel:** It swaps USDC for prepaid compute credits.
 
-When the agent wakes up, it checks its fuel. Low on credits? It autonomously signs a blockchain transaction to send $1 USDC to the Sovereign API. In return, receiving 500,000 sats of compute power.
+When the agent wakes up, it checks its fuel. Low on credits? It autonomously signs a blockchain transaction to send $1 USDC to the Sovereign API. In return, receiving $1.00 worth of compute credits.
 
 It then uses that power to execute its mission—whether that's monitoring a Discord server, trading tokens, or creating art.
 
