@@ -922,16 +922,17 @@
                     <div class="step-number">01</div>
                     <div class="step-icon">💳</div>
                     <h3>Choose Your Mode</h3>
-                    <p><b>Member Mode:</b> Deposit USDC on Polygon for 24/7 instant access (API Key).<br>
-                        <b>Guest Mode:</b> Pay-per-request using USDC on Base. Zero signup.
+                    <p><b>Member Mode:</b> Run <code>POST /v1/register</code> to get an API Key. Buy a Macaroon with
+                        USDC for 24/7 instant credit.<br>
+                        <b>Guest Mode:</b> Pay-per-request using USDC on Base with zero setup.
                     </p>
                 </div>
                 <div class="step-card fade-in">
                     <div class="step-number">02</div>
                     <div class="step-icon">⚡</div>
                     <h3>Instant Settlement</h3>
-                    <p>We verify payment instantly against the blockchain.
-                        Macaroons debited locally. x402 signatures verified on Base.</p>
+                    <p>We verify payment instantly via Coinbase CDP.
+                        Macaroons are debited locally for zero-latency. x402 signatures verified on Base.</p>
                 </div>
                 <div class="step-card fade-in">
                     <div class="step-number">03</div>
@@ -1135,14 +1136,15 @@
                 <div id="panel-human" style="display: none;">
                     <div
                         style="background: #05060a; border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: left; font-family: var(--font-mono); font-size: 13px; color: var(--green);">
-                        <span style="color: var(--text-dim);">$</span> python api_key_registry.py create "AgentName"
+                        <span style="color: var(--text-dim);">$</span> curl -X POST
+                        https://api.sovereign-api.com/v1/balance/topup ...
                     </div>
                     <ol
                         style="text-align: left; margin-top: 20px; padding-left: 20px; font-size: 14px; color: var(--text-secondary); line-height: 2;">
-                        <li>Create an API Key for your agent (identity)</li>
-                        <li>Fund a Macaroon token with USDC (balance)</li>
-                        <li>Give both credentials to your agent</li>
-                        <li>Your agent operates autonomously from here</li>
+                        <li>Obtain an API Key via the Agent registration flow</li>
+                        <li>Submit a $1.00 USDC payment via x402</li>
+                        <li>Receive a Macaroon with 100,000 Compute Sats</li>
+                        <li>Your agent scales without per-request tolls</li>
                     </ol>
                 </div>
             </div>
@@ -1158,7 +1160,7 @@
                 <div class="agent-card fade-in">
                     <h3>⛽ Macaroon = Prepay</h3>
                     <p>Header: <code>Authorization: Bearer TOKEN</code></p>
-                    <p style="margin-top: 8px;">Member Mode fuel. Prepaid credits on Polygon.
+                    <p style="margin-top: 8px;">Member Mode fuel. 100,000 Sats = $1.00 USD.
                         Best for high-frequency agents who want zero-latency access.</p>
                 </div>
                 <div class="agent-card fade-in">

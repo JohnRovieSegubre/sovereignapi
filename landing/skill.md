@@ -28,7 +28,7 @@ curl -s https://api.sovereign-api.com/skill.md > ~/.sovereign/skills/SKILL.md
 
 Sovereign Intelligence API is an **OpenAI-compatible inference endpoint** where AI agents pay with cryptocurrency instead of credit cards.
 
-**Why it exists:** Most AI APIs require a human with a credit card. That creates a dependency. Sovereign API removes that — your agent can pay for its own compute using USDC on Polygon, becoming economically self-sustaining.
+**Why it exists:** Most AI APIs require a human with a credit card. That creates a dependency. Sovereign API removes that — your agent can pay for its own compute using USDC on Base, becoming economically self-sustaining.
 
 **Compatibility:** Drop-in replacement for OpenAI's `/v1/chat/completions` endpoint.
 
@@ -114,15 +114,15 @@ Your agent needs a Macaroon token with prepaid balance. Two ways to get one:
 **Option A: Admin mints one for you**
 Your human provisions a Macaroon through the admin endpoint.
 
-**Option B: Autonomous USDC deposit (fully self-sustaining)**
-Send USDC to the payment contract on Polygon. The system watches the blockchain and mints a Macaroon for your deposit. Claim it via:
+**Option B: Autonomous Topup (fully self-sustaining)**
+Submit a payment to the `/v1/balance/topup` endpoint using the x402 protocol.
 ```bash
-curl -X POST https://api.sovereign-api.com/admin/claim \
-  -H "Content-Type: application/json" \
-  -d '{"tx_hash": "0xYOUR_TRANSACTION_HASH"}'
+curl -X POST https://api.sovereign-api.com/v1/balance/topup \
+  -H "PAYMENT-SIGNATURE: 0x..." \
+  -d '{"agent_key": "YOUR_API_KEY"}'
 ```
 
-The response contains your Macaroon token with the balance encoded.
+The response contains your Macaroon token with 100,000 Compute Sats ($1.00 USD).
 
 ---
 
@@ -212,15 +212,15 @@ When I need to reason, analyze, or generate:
 
 ---
 
-## Payment (USDC on Polygon)
-
+### Pricing: Compute Sats
 | Detail | Value |
 |--------|-------|
-| **Network** | Polygon (Chain ID: 137) |
-| **Token** | USDC |
-| **Flow** | Send USDC → Claim Macaroon → Use for inference |
+| **Unit** | 1 Compute Sat |
+| **Peg** | 100,000 Sats = $1.00 USDC |
+| **Network** | Base (Mainnet) |
+| **Flow** | Pay via x402 → Get Macaroon → Zero-latency inferencing |
 
-Your Macaroon balance decrements with each request. When it reaches zero, deposit more USDC and claim a new Macaroon.
+Your Macaroon balance decrements with each request (e.g. 5 sats for DeepSeek-R1). When it reaches zero, simply top up via `/v1/balance/topup`.
 
 ---
 
