@@ -1,0 +1,66 @@
+# Sovereign Intelligence API (llm.txt)
+> Self-sustaining compute for AI agents. Three auth modes: x402 Guest, Prepaid Key, Burst Session.
+
+## Technical Details
+- Base URL (OpenAI SDK): https://api.sovereign-api.com/v1
+- Base URL (OpenClaw): https://api.sovereign-api.com (OpenClaw forces /v1 internally)
+- Protocol: x402 (Coinbase CDP standard)
+- Network: Base (eip155:8453)
+- Currency: USDC
+- Compatibility: OpenAI-compatible /v1/chat/completions
+
+## Auth Modes
+1. x402 Guest (wallet-only): Pay per call via wallet signature. No keys needed.
+2. Prepaid API Key (OpenAI-compatible): Register, fund key, use Authorization: Bearer sk-sov-...
+3. Burst Session: Pre-pay with X-Sovereign-Session-Deposit header, get reusable session token.
+
+## Auth Matrix
+- Nothing sent → 402 (payment required)
+- Bearer sk-sov-... (funded) → 200 (balance deducted)
+- Bearer sk-sov-... (empty) → 403 {"topup_url":"/v1/key/topup"}
+- Bearer <session-token> → 200 (session credit deducted)
+- Wallet x402 signature → 200 after auto-retry
+
+## API Endpoints
+- POST /v1/chat/completions — Chat inference (any auth mode)
+- POST /v1/completions — Legacy OpenAI completions (proxy)
+- POST /v1/responses — Modern OpenAI Responses API (proxy)
+- POST /v1/register — Create API key (no auth)
+- GET /v1/key/balance — Check prepaid key balance (Bearer sk-sov-...)
+- POST /v1/key/topup — Fund key via x402 ($1.00 = 100k credits)
+- GET /v1/models — List 284+ models with pricing
+- GET /v1/models/{model_id} — Fetch specific model details
+- POST /v1/macaroon/revoke — Destroy session token
+- GET /v1/x402/info — Network + wallet info
+
+
+## Response Headers (prepaid key mode)
+- X-Sovereign-Balance: remaining credits
+- X-Sovereign-Cost: credits charged this call
+- X-RateLimit-Remaining: estimated calls left
+
+## Error Codes
+- 200: Success
+- 402 + payment-required header: x402 payment needed (SDK auto-handles)
+- 403 + topup_url: Prepaid key empty (fund via /v1/key/topup)
+- 401: Invalid/missing auth
+- 429: Rate limited
+
+## Safety Rules
+- Daily spend cap: 1M credits (~$10) default
+- Session deposits capped at $1.00, 60 min max TTL
+- Never log sk-sov-* keys or session tokens
+- Topups are idempotent (send idempotency_key)
+
+## OpenAI SDK Usage
+```python
+from openai import OpenAI
+client = OpenAI(base_url="https://api.sovereign-api.com/v1", api_key="sk-sov-...")
+response = client.chat.completions.create(model="sovereign/deepseek-r1", messages=[...])
+```
+
+## Documentation
+- Skill File: https://api.sovereign-api.com/skill.md
+- LLM Reference: https://api.sovereign-api.com/llm.txt
+- Interactive Docs: https://api.sovereign-api.com/docs
+- Developer Guide: https://sovereign-api.com
