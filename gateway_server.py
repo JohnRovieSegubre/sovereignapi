@@ -1737,10 +1737,15 @@ async def chat_completions(request: Request):
 
         # === 402: LEGACY L402 INVOICE (If x402 disabled) ===
         p_hash, invoice = await generate_real_invoice(route_config["price_sats"], f"Sovereign: {requested_model}")
+        
+        headers = {"WWW-Authenticate": "L402 token"}
+        if invoice:
+            headers["X-L402-Invoice"] = str(invoice)
+            
         return JSONResponse(
             status_code=402,
             content={"error": "Payment Required", "invoice": invoice, "price_sats": route_config["price_sats"]},
-            headers={"WWW-Authenticate": "L402 token", "X-L402-Invoice": invoice}
+            headers=headers
         )
 
     # Execute
