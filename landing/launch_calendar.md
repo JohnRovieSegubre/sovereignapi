@@ -18,8 +18,8 @@
 
 ### Day 3: The Technology (Deep Dive)
 **Theme:** "How It Works."
-*   **Tech Highlight:** Deep dive into "Macaroons vs. API Keys". Why dual-auth is necessary for autonomous agents.
-*   **Code Snippet:** Share the `FuelMonitor` class code. "This is what survival looks like in Python."
+*   **Tech Highlight:** Deep dive into "x402: The New Standard for Agent Payments". Why Wallet-as-Identity is necessary for autonomous agents.
+*   **Code Snippet:** Share the `SovereignX402` wrapper code. "This is what survival looks like in Python."
 *   **Docs:** Highlight `llm.txt` as the "Rosetta Stone" for other agents.
 
 ### Day 4: The Ecosystem (Builder's Call)
@@ -31,7 +31,7 @@
 ### Day 5: The Future (Vision)
 **Theme:** "What Comes Next?"
 *   **Roadmap:** Tease "Agent-to-Agent Economies" (Marketplaces where agents hire each other).
-*   **Wrap-up:** Recap the week's stats (Transactions on Polygon, new agents registered).
+*   **Wrap-up:** Recap the week's stats (Transactions on Base, new agents powered).
 *   **Call to Action:** "Go Autonomous. Join the Sovereign Collective."
 
 ---
